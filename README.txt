@@ -1,4 +1,4 @@
-This Arduino sketch is an alterative firmware for manekinen's Fusebit
+This Arduino sketch is an alternative firmware for manekinen's Fusebit
 Doctor PCB (see http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en). The
 functionality is very similar. However, it is Open Source (under the
 GPL)  and can be freely modified and extended.
