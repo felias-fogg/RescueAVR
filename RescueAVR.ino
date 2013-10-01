@@ -26,7 +26,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define VERSION  "0.93"
+#define VERSION  "0.94"
 
 #include <avr/pgmspace.h>
 
@@ -295,7 +295,8 @@ void setup() { // run once, when the sketch starts
   pinMode(BS2, OUTPUT);
   pinMode(XTAL1, OUTPUT);
 
-  if (digitalRead(0) == LOW) interactive_mode = false; // no RS232 connection!
+  if (digitalRead(0) == LOW)
+  interactive_mode = false; // no RS232 connection!
   
 
   // Initialize output pins as needed
@@ -505,16 +506,21 @@ void loop() {  // run over and over again
     leaveHVProgMode();
   } else { // non-interactive mode
 
+    Serial.println(F("Start programming..."));
     enterHVProgMode(mcu_mode);
 
     // try to reset all locks
+    Serial.println(F("Reset locks - if possible..."));
     burnFuse(mcu_mode, 0xFF, LOCK_SEL);
 
     // remove lock by erasing chip - if necessary and allowed
     lock = readFuse(mcu_mode, LOCK_SEL);
-    if (lock != 0xFF && digitalRead(ECJUMPER) == LOW) eraseChip(mcu_mode); 
-      
+    if (lock != 0xFF && digitalRead(ECJUMPER) == LOW) {
+      Serial.println(F("Erase chip ..."));
+      eraseChip(mcu_mode); 
+    }
     // try to reset fuses
+    Serial.println(F("Set fuses to default values..."));
     burnFuse(mcu_mode, dlfuse, LFUSE_SEL);
     if (mcu_fuses > 1) burnFuse(mcu_mode, dhfuse, HFUSE_SEL);
     if (mcu_fuses > 2) burnFuse(mcu_mode, defuse, EFUSE_SEL);
@@ -527,12 +533,19 @@ void loop() {  // run over and over again
     
     leaveHVProgMode();
     // if successul blink green, otherwise blink red
+    Serial.println(F("Verify fuse settings..."));
     if (verifyFuses(mcu_fuses,
                     lock,0xFF,
                     lfuse,dlfuse,
                     hfuse,dhfuse,
-                    efuse,defuse)) ledBlink(GREEN,5);
-    else ledBlink(RED,5);
+                    efuse,defuse)) {
+      Serial.println(F("-> successful"));
+      ledBlink(GREEN,5);
+    } else {
+      Serial.println(F("-> unsuccessful"));
+      ledBlink(RED,5);
+    }
+    Serial.println(F("Bye, bye ..."));
     while (true) { };
   }
 }
@@ -634,6 +647,8 @@ void leaveHVProgMode() {
   PORTB = 0;
   DDRB = 0;
   
+  PAGEL = ORIGPAGEL;
+  XA1 = ORIGXA1;
   digitalWrite(OE, HIGH);
   digitalWrite(RST, LOW);  // exit programming mode
   delay(1);
