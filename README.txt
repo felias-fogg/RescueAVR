@@ -1,9 +1,7 @@
 This Arduino sketch is an alterative firmware for manekinen's Fusebit
 Doctor PCB (see http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en). The
 functionality is very similar. However, it is Open Source (under the
-GPL) and in particular it corrects a bug that prevents the original
-firmware to recognize chips from the ATmega8 family once the RSTENBL
-or DWEN fuse has been activated.
+GPL)  and can be freely modified and extended.
 
 You can install the firmware by simply uploading the HEX file to an
 ATmega328(P) and deactivating the fuse CKDIV8, so that the chip runs
