@@ -25,14 +25,14 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#define VERSION  "0.9"
+#define VERSION  "0.91"
 
 #include <avr/pgmspace.h>
 
 // table with signature
 // 2 bytes signatures (no 1E), number of fuses, 
 // 3 bytes of default fuses, flag = handled by RescueAVR already
-#define MCU_NUM 47
+#define MCU_NUM 62
 uint16_t mcu_types[MCU_NUM][7] PROGMEM =
   {
     { 0x91, 0x01, 1, 0xFF, 0x00, 0x00, 1 }, // at90s2313
@@ -58,18 +58,31 @@ uint16_t mcu_types[MCU_NUM][7] PROGMEM =
     { 0x91, 0x0C, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny261
     { 0x92, 0x08, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny461
     { 0x93, 0x0D, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny861
+    { 0x91, 0x07, 1, 0xFF, 0x00, 0x00, 1 }, // attiny28
+    { 0x92, 0x09, 3, 0x6E, 0xDF, 0xFF, 1 }, // attiny48
+    { 0x92, 0x09, 3, 0x6E, 0xDF, 0xFF, 1 }, // attiny88
     { 0x93, 0x06, 2, 0xC1, 0xD9, 0x00, 1 }, // atmega8515
     { 0x93, 0x08, 2, 0xC1, 0xD9, 0x00, 1 }, // atmega8535
     { 0x93, 0x07, 2, 0xE1, 0xD9, 0x00, 1 }, // atmega8
+    { 0x93, 0x07, 1, 0xDF, 0x00, 0x00, 1 }, // atmega8hva
     { 0x94, 0x03, 2, 0xE1, 0x99, 0x00, 1 }, // atmega16
+    { 0x94, 0x0c, 1, 0xDF, 0x00, 0x00, 1 }, // atmega16hva
+    { 0x94, 0x0d, 2, 0xDE, 0xE9, 0x00, 1 }, // atmega16hvb
     { 0x95, 0x02, 2, 0xE1, 0x99, 0x00, 1 }, // atmega32
+    { 0x95, 0x86, 3, 0x41, 0xD9, 0xF9, 1 }, // atmega32c1
+    { 0x95, 0x10, 2, 0xDE, 0xE9, 0x00, 1 }, // atmega32hvb
     { 0x96, 0x02, 3, 0xC1, 0x99, 0xFF, 1 }, // atmega64
+    { 0x96, 0x86, 3, 0x41, 0xD9, 0xF9, 1 }, // atmega64c1
+    { 0x96, 0x10, 2, 0xD6, 0xF9, 0x00, 1 }, // atmega64hve2
+    { 0x96, 0x84, 3, 0x41, 0xD9, 0xF9, 1 }, // atmega64m1
     { 0x97, 0x02, 3, 0xC1, 0x99, 0xFD, 1 }, // atmega128
+    { 0x97, 0x01, 3, 0xC1, 0x99, 0xFD, 1 }, // atmega128rfa1
+    { 0x94, 0x04, 3, 0x62, 0x99, 0xFF, 1 }, // atmega162
     { 0x92, 0x05, 3, 0x62, 0xDF, 0xFF, 1 }, // atmega48
     { 0x92, 0x0A, 3, 0x62, 0xDF, 0xFF, 1 }, // atmega48p
     { 0x93, 0x0A, 3, 0x62, 0xDF, 0xFF, 1 }, // atmega88
-    { 0x93, 0x0F, 3, 0x62, 0xDF, 0xFF, 1 }, // atmega88p
-    { 0x94, 0x06, 3, 0x62, 0xDF, 0xFF, 1 }, // atmega168
+    { 0x93, 0x0F, 3, 0x62, 0xDF, 0xF9, 1 }, // atmega88p
+    { 0x94, 0x06, 3, 0x62, 0xDF, 0xF9, 1 }, // atmega168
     { 0x94, 0x0B, 3, 0x62, 0xDF, 0xFF, 1 }, // atmega168p
     { 0x95, 0x14, 3, 0x62, 0xD9, 0xFF, 1 }, // atmega328
     { 0x94, 0x0F, 3, 0x42, 0x99, 0xFF, 1 }, // atmega164a
@@ -79,8 +92,10 @@ uint16_t mcu_types[MCU_NUM][7] PROGMEM =
     { 0x95, 0x11, 3, 0x42, 0x99, 0xFF, 1 }, // atmega324pa
     { 0x96, 0x09, 3, 0x62, 0x99, 0xFF, 1 }, // atmega644
     { 0x96, 0x0A, 3, 0x62, 0x99, 0xFF, 1 }, // atmega644P
+    { 0x96, 0x02, 0, 0x00, 0x00, 0x00, 0 }, // atmega644rfr2
     { 0x97, 0x06, 3, 0x42, 0x99, 0xFF, 1 }, // atmega1284
     { 0x97, 0x05, 3, 0x42, 0x99, 0xFF, 1 }, // atmega1284p
+    { 0x97, 0x03, 0, 0x00, 0x00, 0x00, 0 }, // atmega1284rfr2
     { 0x95, 0x0F, 3, 0x62, 0xD9, 0xFF, 1 }, // atmega328p
 
   };
@@ -107,13 +122,26 @@ char attiny26[] PROGMEM = "ATtiny26";
 char attiny261[] PROGMEM = "ATtiny261";
 char attiny461[] PROGMEM = "ATtiny461";
 char attiny861[] PROGMEM = "ATtiny861";
+char attiny28[] PROGMEM = "ATtiny28";
+char attiny48[] PROGMEM = "ATtiny48";
+char attiny88[] PROGMEM = "ATtiny88";
 char atmega8515[] PROGMEM = "ATmega8515";
 char atmega8535[] PROGMEM = "ATmega8535";
 char atmega8[] PROGMEM = "ATmega8";
+char atmega8hva[] PROGMEM = "ATmega8HVA";
 char atmega16[] PROGMEM = "ATmega16";
+char atmega16hva[] PROGMEM = "ATmega16HVA";
+char atmega16hvb[] PROGMEM = "ATmega16HVB";
 char atmega32[] PROGMEM = "ATmega32";
+char atmega32c1[] PROGMEM = "ATmega32C1";
+char atmega32hvb[] PROGMEM = "ATmega32HVB";
 char atmega64[] PROGMEM = "ATmega64";
+char atmega64c1[] PROGMEM = "ATmega64c1";
+char atmega64hev2[] PROGMEM = "ATmega64hev2";
+char atmega64m1[] PROGMEM = "ATmega64m1";
 char atmega128[] PROGMEM = "ATmega128";
+char atmega128rfa1[] PROGMEM = "ATmega128rfa1";
+char atmega162[] PROGMEM = "ATmega162";
 char atmega48[] PROGMEM = "ATmega48";
 char atmega48p[] PROGMEM = "ATmega48P";
 char atmega88[] PROGMEM = "ATmega88";
@@ -128,8 +156,10 @@ char atmega324p[] PROGMEM = "ATmega324P";
 char atmega324pa[] PROGMEM = "ATmega324PA";
 char atmega644[] PROGMEM = "ATmega644";
 char atmega644p[] PROGMEM = "ATmega644P";
+char atmega644rfr2[] PROGMEM = "ATmega644RFR2";
 char atmega1284[] PROGMEM = "ATmega1284";
 char atmega1284p[] PROGMEM = "ATmega1284P";
+char atmega1284rfr2[] PROGMEM = "ATmega1284RFR2";
 char atmega328p[] PROGMEM = "ATmega328P";
 
 PGM_P name_table[] PROGMEM = 
@@ -157,13 +187,26 @@ PGM_P name_table[] PROGMEM =
     attiny261,
     attiny461,
     attiny861,
+    attiny28,
+    attiny48,
+    attiny88,
     atmega8515,
     atmega8535,
     atmega8,
+    atmega8hva,
     atmega16,
+    atmega16hva,
+    atmega16hvb,
     atmega32,
+    atmega32c1,
+    atmega32hvb,
     atmega64,
+    atmega64c1,
+    atmega64hev2,
+    atmega64m1,
     atmega128,
+    atmega128rfa1,
+    atmega162,
     atmega48,
     atmega48p,
     atmega88,
@@ -178,8 +221,10 @@ PGM_P name_table[] PROGMEM =
     atmega324pa,
     atmega644,
     atmega644p,
+    atmega644rfr2,
     atmega1284,
     atmega1284p,
+    atmega1284rfr2,
     atmega328p,
   };
 
