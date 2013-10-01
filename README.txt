@@ -1,5 +1,5 @@
-This Arduino sketch is alterative firmware for manekinen's Fusebit
-Doctor (see http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en). The
+This Arduino sketch is an alterative firmware for manekinen's Fusebit
+Doctor PCB (see http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en). The
 functionality is very similar. However, it is Open Source (under the
 GPL) and in particular it corrects a bug that prevents the original
 firmware to recognize chips from the ATmega8 family once the RSTENBL
@@ -32,24 +32,24 @@ how many fuse bytes the chip has, you can specify that and continue
 from there in order to manually change the fuses to desirable values
 (look into the manual!). If the board cannot detect any chip, you
 still can try to send the commands to the chip. Specify the protocol:
-HVPP for all ATmega chips, HVPP for Tiny for all MCU from the
+HVPP for all ATmega chips, HVPP for Tiny for all MCUs from the
 ATtiny2313 and ATtiny26(1) family, and HVSP for all the other ATtiny
 chips. 
 
-If you want to to change the firmware, you cando this using the
-Arduino IDE. In order to do so, you first need to install a
-bootloader. Since the ATmega is running on 8 MHz, you need to use the
-bootloader ATmegaBOOT_168_atmega328_pro_8MHz.hex (for your ATmega328P)
-or ATmegaBOOT_168_pro_8MHz.hex (if you use an ATmega168). You also
-should set the fuse BOOTRST (enabling the boot reset vector) and set
-the boot loader size to 2048 bytes in the fuses. Now you can put the
-chip onto the fusebit doctor board and connect via a serial line to
-your computer. Once you have registered this serial line with your
-Arduino IDE and have chosen "Arduino Pro or Pro Mini (3.3V 8MHz) w/
-ATmega328", you can start to download sketches to the board. Note that
-you always have to press the reset button in order to enable the
-transfer of the program from your computer to the chip. The timing is
-critical here. Press the button immediately after the compiler has
-finished its work!
+If you want to change the firmware, you can do this using the Arduino
+IDE. In order to do so, you first need to install a bootloader. Since
+the ATmega is running on 8 MHz, you need to use the bootloader
+ATmegaBOOT_168_atmega328_pro_8MHz.hex (for your ATmega328P) or
+ATmegaBOOT_168_pro_8MHz.hex (if you use an ATmega168). You also should
+set the fuse BOOTRST (enabling the boot reset vector) and set the boot
+loader size to 2048 bytes in the fuses. Now you can put the chip onto
+the fusebit doctor board and connect via a serial line to your
+computer. Once you have registered this serial line with your Arduino
+IDE and have chosen "Arduino Pro or Pro Mini (3.3V 8MHz) w/ ATmega328"
+as the board you want to work with, you can start to download sketches
+to the board. Note that you always have to press the reset button in
+order to enable the transfer of the program from your computer to the
+chip. The timing is critical here. Press the button immediately after
+the compiler has finished its work!
 
 
