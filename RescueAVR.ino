@@ -25,80 +25,16 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#define VERSION  "0.91"
+
+#define VERSION  "0.93"
 
 #include <avr/pgmspace.h>
 
-// table with signature
-// 2 bytes signatures (no 1E), number of fuses, 
-// 3 bytes of default fuses, flag = handled by RescueAVR already
-#define MCU_NUM 62
-uint16_t mcu_types[MCU_NUM][7] PROGMEM =
-  {
-    { 0x91, 0x01, 1, 0xFF, 0x00, 0x00, 1 }, // at90s2313
-    { 0x91, 0x05, 1, 0xFF, 0x00, 0x00, 1 }, // at90s2333
-    { 0x91, 0x03, 1, 0xFF, 0x00, 0x00, 1 }, // at90s2343
-    { 0x92, 0x03, 1, 0xFF, 0x00, 0x00, 1 }, // at90s4433
-    { 0x92, 0x02, 1, 0xFF, 0x00, 0x00, 1 }, // at90s4434
-    { 0x93, 0x01, 1, 0xFF, 0x00, 0x00, 1 }, // at90s8515
-    { 0x93, 0x03, 1, 0xFF, 0x00, 0x00, 1 }, // at90s8535
-    { 0x90, 0x04, 1, 0xFF, 0x00, 0x00, 1 }, // attiny11
-    { 0x90, 0x05, 1, 0xFF, 0x00, 0x00, 1 }, // attiny12
-    { 0x90, 0x07, 2, 0x6A, 0xFF, 0x00, 1 }, // attiny13
-    { 0x90, 0x06, 1, 0xFF, 0x00, 0x00, 1 }, // attiny15
-    { 0x91, 0x0A, 3, 0x64, 0xDF, 0xFF, 1 }, // attiny2313
-    { 0x92, 0x0D, 3, 0x64, 0xDF, 0xFF, 1 }, // attiny4313
-    { 0x91, 0x0B, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny24
-    { 0x92, 0x07, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny44
-    { 0x93, 0x0C, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny84
-    { 0x91, 0x08, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny25
-    { 0x92, 0x06, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny45
-    { 0x93, 0x0B, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny85
-    { 0x91, 0x09, 2, 0x41, 0xF7, 0x00, 1 }, // attiny26
-    { 0x91, 0x0C, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny261
-    { 0x92, 0x08, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny461
-    { 0x93, 0x0D, 3, 0x62, 0xDF, 0xFF, 1 }, // attiny861
-    { 0x91, 0x07, 1, 0xFF, 0x00, 0x00, 1 }, // attiny28
-    { 0x92, 0x09, 3, 0x6E, 0xDF, 0xFF, 1 }, // attiny48
-    { 0x92, 0x09, 3, 0x6E, 0xDF, 0xFF, 1 }, // attiny88
-    { 0x93, 0x06, 2, 0xC1, 0xD9, 0x00, 1 }, // atmega8515
-    { 0x93, 0x08, 2, 0xC1, 0xD9, 0x00, 1 }, // atmega8535
-    { 0x93, 0x07, 2, 0xE1, 0xD9, 0x00, 1 }, // atmega8
-    { 0x93, 0x07, 1, 0xDF, 0x00, 0x00, 1 }, // atmega8hva
-    { 0x94, 0x03, 2, 0xE1, 0x99, 0x00, 1 }, // atmega16
-    { 0x94, 0x0c, 1, 0xDF, 0x00, 0x00, 1 }, // atmega16hva
-    { 0x94, 0x0d, 2, 0xDE, 0xE9, 0x00, 1 }, // atmega16hvb
-    { 0x95, 0x02, 2, 0xE1, 0x99, 0x00, 1 }, // atmega32
-    { 0x95, 0x86, 3, 0x41, 0xD9, 0xF9, 1 }, // atmega32c1
-    { 0x95, 0x10, 2, 0xDE, 0xE9, 0x00, 1 }, // atmega32hvb
-    { 0x96, 0x02, 3, 0xC1, 0x99, 0xFF, 1 }, // atmega64
-    { 0x96, 0x86, 3, 0x41, 0xD9, 0xF9, 1 }, // atmega64c1
-    { 0x96, 0x10, 2, 0xD6, 0xF9, 0x00, 1 }, // atmega64hve2
-    { 0x96, 0x84, 3, 0x41, 0xD9, 0xF9, 1 }, // atmega64m1
-    { 0x97, 0x02, 3, 0xC1, 0x99, 0xFD, 1 }, // atmega128
-    { 0x97, 0x01, 3, 0xC1, 0x99, 0xFD, 1 }, // atmega128rfa1
-    { 0x94, 0x04, 3, 0x62, 0x99, 0xFF, 1 }, // atmega162
-    { 0x92, 0x05, 3, 0x62, 0xDF, 0xFF, 1 }, // atmega48
-    { 0x92, 0x0A, 3, 0x62, 0xDF, 0xFF, 1 }, // atmega48p
-    { 0x93, 0x0A, 3, 0x62, 0xDF, 0xFF, 1 }, // atmega88
-    { 0x93, 0x0F, 3, 0x62, 0xDF, 0xF9, 1 }, // atmega88p
-    { 0x94, 0x06, 3, 0x62, 0xDF, 0xF9, 1 }, // atmega168
-    { 0x94, 0x0B, 3, 0x62, 0xDF, 0xFF, 1 }, // atmega168p
-    { 0x95, 0x14, 3, 0x62, 0xD9, 0xFF, 1 }, // atmega328
-    { 0x94, 0x0F, 3, 0x42, 0x99, 0xFF, 1 }, // atmega164a
-    { 0x94, 0x0A, 3, 0x42, 0x99, 0xFF, 1 }, // atmega164p
-    { 0x95, 0x15, 3, 0x42, 0x99, 0xFF, 1 }, // atmega324a
-    { 0x95, 0x08, 3, 0x42, 0x99, 0xFF, 1 }, // atmega324p
-    { 0x95, 0x11, 3, 0x42, 0x99, 0xFF, 1 }, // atmega324pa
-    { 0x96, 0x09, 3, 0x62, 0x99, 0xFF, 1 }, // atmega644
-    { 0x96, 0x0A, 3, 0x62, 0x99, 0xFF, 1 }, // atmega644P
-    { 0x96, 0x02, 0, 0x00, 0x00, 0x00, 0 }, // atmega644rfr2
-    { 0x97, 0x06, 3, 0x42, 0x99, 0xFF, 1 }, // atmega1284
-    { 0x97, 0x05, 3, 0x42, 0x99, 0xFF, 1 }, // atmega1284p
-    { 0x97, 0x03, 0, 0x00, 0x00, 0x00, 0 }, // atmega1284rfr2
-    { 0x95, 0x0F, 3, 0x62, 0xD9, 0xFF, 1 }, // atmega328p
+// communication speed 
+#define  BAUD         19200    // Serial port rate at which to talk to PC
 
-  };
+
+// The names of all MCUs known to us
 char at90s2313[] PROGMEM = "AT90S2313";
 char at90s2333[] PROGMEM = "AT90S2333";
 char at90s2343[] PROGMEM = "AT90S2343";
@@ -137,10 +73,10 @@ char atmega32c1[] PROGMEM = "ATmega32C1";
 char atmega32hvb[] PROGMEM = "ATmega32HVB";
 char atmega64[] PROGMEM = "ATmega64";
 char atmega64c1[] PROGMEM = "ATmega64c1";
-char atmega64hev2[] PROGMEM = "ATmega64hev2";
+char atmega64hev2[] PROGMEM = "ATmega64HEV2";
 char atmega64m1[] PROGMEM = "ATmega64m1";
 char atmega128[] PROGMEM = "ATmega128";
-char atmega128rfa1[] PROGMEM = "ATmega128rfa1";
+char atmega128rfa1[] PROGMEM = "ATmega128RFA1";
 char atmega162[] PROGMEM = "ATmega162";
 char atmega48[] PROGMEM = "ATmega48";
 char atmega48p[] PROGMEM = "ATmega48P";
@@ -162,75 +98,78 @@ char atmega1284p[] PROGMEM = "ATmega1284P";
 char atmega1284rfr2[] PROGMEM = "ATmega1284RFR2";
 char atmega328p[] PROGMEM = "ATmega328P";
 
-PGM_P name_table[] PROGMEM = 
-  {
-    at90s2313,
-    at90s2333,
-    at90s2343,
-    at90s4433,
-    at90s4434,
-    at90s8515,
-    at90s8535,
-    attiny11,
-    attiny12,
-    attiny13,
-    attiny15,
-    attiny2313,
-    attiny4313,
-    attiny24,
-    attiny44,
-    attiny84,
-    attiny25,
-    attiny45,
-    attiny85,
-    attiny26,
-    attiny261,
-    attiny461,
-    attiny861,
-    attiny28,
-    attiny48,
-    attiny88,
-    atmega8515,
-    atmega8535,
-    atmega8,
-    atmega8hva,
-    atmega16,
-    atmega16hva,
-    atmega16hvb,
-    atmega32,
-    atmega32c1,
-    atmega32hvb,
-    atmega64,
-    atmega64c1,
-    atmega64hev2,
-    atmega64m1,
-    atmega128,
-    atmega128rfa1,
-    atmega162,
-    atmega48,
-    atmega48p,
-    atmega88,
-    atmega88p,
-    atmega168,
-    atmega168p,
-    atmega328,
-    atmega164a,
-    atmega164p,
-    atmega324a,
-    atmega324p,
-    atmega324pa,
-    atmega644,
-    atmega644p,
-    atmega644rfr2,
-    atmega1284,
-    atmega1284p,
-    atmega1284rfr2,
-    atmega328p,
+// table with signatures
+// 1st word signature (w/o 1E), 2nd word: MSB number of fuses (or 0 if we do not know),
+// 2nd word LSB: low fuse, 3rd word MSB: high fuse, 3rd word LSB: extended fuse,
+// 4th word string address. 
+
+#define MCU_NUM 62
+uint16_t mcu_types[MCU_NUM][4] PROGMEM =
+  { 
+    { 0x9101, 0x01FF, 0x0000, (uint16_t)at90s2313 },
+    { 0x9105, 0x01FF, 0x0000, (uint16_t)at90s2333 },
+    { 0x9103, 0x01FF, 0x0000, (uint16_t)at90s2343 },
+    { 0x9203, 0x01FF, 0x0000, (uint16_t)at90s4433 },
+    { 0x9202, 0x01FF, 0x0000, (uint16_t)at90s4434 },
+    { 0x9301, 0x01FF, 0x0000, (uint16_t)at90s8515 },
+    { 0x9303, 0x01FF, 0x0000, (uint16_t)at90s8535 },
+    { 0x9004, 0x01FF, 0x0000, (uint16_t)attiny11 },
+    { 0x9005, 0x01FF, 0x0000, (uint16_t)attiny12 },
+    { 0x9007, 0x026A, 0xFF00, (uint16_t)attiny13 },
+    { 0x9006, 0x01FF, 0x0000, (uint16_t)attiny15 },
+    { 0x910A, 0x0364, 0xDFFF, (uint16_t)attiny2313 },
+    { 0x920D, 0x0364, 0xDFFF, (uint16_t)attiny4313 },
+    { 0x910B, 0x0362, 0xDFFF, (uint16_t)attiny24 },
+    { 0x9207, 0x0362, 0xDFFF, (uint16_t)attiny44 },
+    { 0x930C, 0x0362, 0xDFFF, (uint16_t)attiny84 },
+    { 0x9108, 0x0362, 0xDFFF, (uint16_t)attiny25 },
+    { 0x9206, 0x0362, 0xDFFF, (uint16_t)attiny45 },
+    { 0x930B, 0x0362, 0xDFFF, (uint16_t)attiny85 },
+    { 0x9109, 0x0241, 0xF700, (uint16_t)attiny26 },
+    { 0x910C, 0x0362, 0xDFFF, (uint16_t)attiny261 },
+    { 0x9208, 0x0362, 0xDFFF, (uint16_t)attiny461 },
+    { 0x930D, 0x0362, 0xDFFF, (uint16_t)attiny861 },
+    { 0x9107, 0x01FF, 0x0000, (uint16_t)attiny28 },
+    { 0x9209, 0x036E, 0xDFFF, (uint16_t)attiny48 },
+    { 0x9311, 0x036E, 0xDFFF, (uint16_t)attiny88 },
+    { 0x9306, 0x02C1, 0xD900, (uint16_t)atmega8515 },
+    { 0x9308, 0x02C1, 0xD900, (uint16_t)atmega8535 },
+    { 0x9307, 0x02E1, 0xD900, (uint16_t)atmega8 },
+    { 0x9310, 0x01DF, 0x0000, (uint16_t)atmega8hva },
+    { 0x9403, 0x02E1, 0x9900, (uint16_t)atmega16 },
+    { 0x940c, 0x01DF, 0x0000, (uint16_t)atmega16hva },
+    { 0x940d, 0x02DE, 0xE900, (uint16_t)atmega16hvb },
+    { 0x9502, 0x02E1, 0x9900, (uint16_t)atmega32 },
+    { 0x9586, 0x0341, 0xD9F9, (uint16_t)atmega32c1 },
+    { 0x9510, 0x02DE, 0xE900, (uint16_t)atmega32hvb },
+    { 0x9602, 0x03C1, 0x99FF, (uint16_t)atmega64 },
+    { 0x9686, 0x0341, 0xD9F9, (uint16_t)atmega64c1 },
+    { 0x9610, 0x02D6, 0xF900, (uint16_t)atmega64hev2 },
+    { 0x9684, 0x0341, 0xD9F9, (uint16_t)atmega64m1 },
+    { 0x9702, 0x03C1, 0x99FD, (uint16_t)atmega128 },
+    { 0x9701, 0x03C1, 0x99FD, (uint16_t)atmega128rfa1 },
+    { 0x9404, 0x0362, 0x99FF, (uint16_t)atmega162 },
+    { 0x9205, 0x0362, 0xDFFF, (uint16_t)atmega48 },
+    { 0x920A, 0x0362, 0xDFFF, (uint16_t)atmega48p },
+    { 0x930A, 0x0362, 0xDFFF, (uint16_t)atmega88 },
+    { 0x930F, 0x0362, 0xDFF9, (uint16_t)atmega88p },
+    { 0x9406, 0x0362, 0xDFF9, (uint16_t)atmega168 },
+    { 0x940B, 0x0362, 0xDFFF, (uint16_t)atmega168p },
+    { 0x9514, 0x0362, 0xD9FF, (uint16_t)atmega328 },
+    { 0x940F, 0x0342, 0x99FF, (uint16_t)atmega164a },
+    { 0x940A, 0x0342, 0x99FF, (uint16_t)atmega164p },
+    { 0x9515, 0x0342, 0x99FF, (uint16_t)atmega324a },
+    { 0x9508, 0x0342, 0x99FF, (uint16_t)atmega324p },
+    { 0x9511, 0x0342, 0x99FF, (uint16_t)atmega324pa },
+    { 0x9609, 0x0362, 0x99FF, (uint16_t)atmega644 },
+    { 0x960A, 0x0362, 0x99FF, (uint16_t)atmega644p },
+    { 0x9602, 0x0000, 0x0000, (uint16_t)atmega644rfr2 },
+    { 0x9706, 0x0342, 0x99FF, (uint16_t)atmega1284 },
+    { 0x9705, 0x0342, 0x99FF, (uint16_t)atmega1284p },
+    { 0x9703, 0x0000, 0x0000, (uint16_t)atmega1284rfr2 },
+    { 0x950F, 0x0362, 0xD9FF, (uint16_t)atmega328p },
   };
 
-
-// User defined settings
-#define  BAUD         19200    // Serial port rate at which to talk to PC
 
 // Pin Assignments for the pins on the FBD board (you shouldn't need to change these)
 #define  VCC      5 
@@ -417,7 +356,7 @@ void setup() { // run once, when the sketch starts
   mcu_index = searchMCU(mcu_signature);
   Serial.print(F("MCU name:  "));
   if (mcu_index >= 0) {
-    if (pgm_read_byte(&(mcu_types[mcu_index][6])) == false) {
+    if ((pgm_read_word(&(mcu_types[mcu_index][1]))>>8) == false) {
       // unfortunately, we do not have enough info about this chip
       printMCUName(mcu_index);
       Serial.print(F(" / "));
@@ -454,7 +393,7 @@ void setup() { // run once, when the sketch starts
   } else {
     printMCUName(mcu_index);
     Serial.println();
-    mcu_fuses = pgm_read_byte(&(mcu_types[mcu_index][2]));
+    mcu_fuses = (pgm_read_word(&(mcu_types[mcu_index][1]))>>8);
     ledOn(GREEN);
     if (interactive_mode) delay(1500);
     else delay(3000);
@@ -469,9 +408,9 @@ void loop() {  // run over and over again
   char action = ' ';
   
   if (mcu_index >= 0) {
-    dlfuse = pgm_read_byte(&(mcu_types[mcu_index][3]));
-    dhfuse = pgm_read_byte(&(mcu_types[mcu_index][4]));
-    defuse = pgm_read_byte(&(mcu_types[mcu_index][5]));
+    dlfuse = pgm_read_word(&(mcu_types[mcu_index][1]))&0xFF;
+    dhfuse = pgm_read_word(&(mcu_types[mcu_index][2]))>>8;
+    defuse = pgm_read_word(&(mcu_types[mcu_index][2]))&0xFF;
   }
 
   enterHVProgMode(mcu_mode);
@@ -601,15 +540,10 @@ void loop() {  // run over and over again
 
 
 int searchMCU(unsigned long sig) {
-  uint8_t b1, b2;
   if ((sig>>16) != 0x1E) return -1;
-  b1 = (sig>>8)&(0xFF);
-  b2 = (sig&0xFF);
   for (int i=0; i < MCU_NUM; i++) {
-    if (b1 == pgm_read_byte(&(mcu_types[i][0])) &&
-        b2 == pgm_read_byte(&(mcu_types[i][1]))) {
+    if ((sig&0xFFFF) == pgm_read_word(&(mcu_types[i][0])))
       return i;
-    }
   }
   return -1;
 }
@@ -617,7 +551,7 @@ int searchMCU(unsigned long sig) {
 void printMCUName(int ix) {
   char buf[15];
   if (ix < 0 || ix >= MCU_NUM) return;
-  strcpy_P(buf, (PGM_P)pgm_read_word(&(name_table[ix])));
+  strcpy_P(buf, (PGM_P)pgm_read_word(&(mcu_types[ix][3])));
   Serial.print(buf);
 }
 
