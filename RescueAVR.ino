@@ -377,8 +377,8 @@ void setup() { // run once, when the sketch starts
     enterHVProgMode(mcu_mode);
     mcu_signature = readSig(mcu_mode);
     leaveHVProgMode();
-    Serial.print(F("DEBUG: SIG="));
-    Serial.println(mcu_signature,HEX);
+    // Serial.print(F("DEBUG: SIG="));
+    // Serial.println(mcu_signature,HEX);
     if ((mcu_signature>>16) == 0x1E) break;
   }
   if (mcu_mode > HVSP) {
