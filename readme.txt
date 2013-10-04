@@ -1,13 +1,43 @@
-This Arduino sketch is an alternative firmware for manekinen's Fusebit
-Doctor PCB (see http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en). The
-functionality is very similar. However, it is Open Source (under the
-GPL)  and can be freely modified and extended.
+You can use this sketch in order to try to resurrect AVR chips with
+wrong fuses using an Arduino and a breadboard, or you can use it as an
+alternative firmware for manekinen's Fusebit Doctor PCB (see
+http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en). The functionality
+is very similar. However, it is Open Source (under the GPL) and can be
+freely modified and extended.
+
+1. Using the sketch on an Arduino with a breadboard
+=================================
+
+I have tried out the sketch with an ATtiny84, ATtiny85, and an
+ATmega328. I have included Fritzing wiring sketches for these three
+chips. For other chips, you have to consult the data sheet of the
+particular microprocessor. 
+
+Be careful with the 12 Volt! If you feed it into the wrong pin of your
+chip, it will probably be immediately gone!
+
+The transistors, I have used are fairly standard once. You can use
+probably any other reasonable type. But make sure that the pins are
+ordered as in the picture, i.e. CBE.
+
+Once you have set everything up and loaded the sketch into the Arduino,
+just open the Arduino Serial Monitor. The Arduino will reset and will
+try to read the signature of the chip. If successful, the sketch will
+tell you the name of the chip, and you can perform different
+actions. Most probably R (= resurrection) is, what you want to
+choose. If the sketch tell you "No chip found!", then either your chip
+is really dead, or you made a wiring mistake (much more likely!).
+
+
+2. Installing and using the software an a Fusebit-Doctor board
+=======================================
 
 You can install the firmware by simply uploading the HEX file to an
 ATmega328(P) and deactivating the fuse CKDIV8, so that the chip runs
 on 8MHz. Now you are all set.
 
-You can either use the board interactively or stand alone. 
+You can either use the board interactively or stand alone, as with the
+original firmware.
 
 Stand alone mode: After power-up, all LEDs are off and you can insert
 a chip. After pressing the button, the board will first try to
@@ -25,7 +55,7 @@ Interactive mode: Set your terminal to 19200 baud, no parity, 1
 stop-bit. The board tries to recognize the chip after pressing the
 button and then allows you to interactively change any fuse or lock,
 to reset the fuses to its default value, or to erase the chip. If the
-chip is unknown, it will still recogize a chip signature. If you know
+chip is unknown, it will still recognize a chip signature. If you know
 how many fuse bytes the chip has, you can specify that and continue
 from there in order to manually change the fuses to desirable values
 (look into the manual!). If the board cannot detect any chip, you

@@ -1,14 +1,23 @@
 // -*- mode: c++; tab-width: 4; indent-tabs-mode: nil -*-
-/*
-  Title:        RescueAVR
 
+//  Title:        RescueAVR
+
+#define VERSION  "2.0"
+
+/*
   based on Jeff Keyzer's HVRescue_Shield and manekinen's Fusebit Doctor.
 
   It uses the hardware dsigned by manekinen but the software is completely
-  new, using ideas und snippets from the Jeff Keyzer's sketch HVRescue_Shield.
+  new, using ideas und snippets from  Jeff Keyzer's sketch HVRescue_Shield.
+  In addition, the program can also be run on a native Arduino, provided
+  12V are supplied and the target chip is connected to the right Arduino
+  pins.
 
-  Currently, it can deal only with a limited number of AVR chips, but it is, of course,
-  easily expandable (see the array below).
+  The program decides on its own whether it runs in Arduino or
+  Fusebit-Doctor mode. This decision is based on the CPU frequency.
+  With F_CPU <= 8000000, it is assumed that the software runs on the Fusebit-Doctor
+  board. Otherwise it must be an Arduino board. This can be overriden with a define
+  below.
   
   Copyright 2013 by Bernhard Nebel and parts are copyrighted by Jeff Keyzer.
  
@@ -26,8 +35,18 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/* Uncomment one of the following two lines, if you do not want to
+   leave the decision on which board we are executed to the 
+   the CPU frequency, i.e. F_CPU <= 8000000 -> FBD_MODE, otherwise ARDUNIO_MODE
+*/
+// #define FBD_MODE
+// #define ARDUINO_MODE
 
-#define VERSION  "0.94"
+#if !defined(FBD_MODE) && !defined(ARDUINO_MODE)
+#if F_CPU <= 8000000L 
+   #define FBD_MODE
+#endif
+#endif
 
 #include <avr/pgmspace.h>
 
@@ -172,7 +191,9 @@ uint16_t mcu_types[MCU_NUM][4] PROGMEM =
   };
 
 
-// Pin Assignments for the pins on the FBD board (you shouldn't need to change these)
+#ifdef FBD_MODE
+/* pin assignment for the FBD board */
+/************************************/
 #define  VCC      5 
 #define  RDY     14 
 #define  OE       2 
@@ -185,16 +206,44 @@ uint16_t mcu_types[MCU_NUM][4] PROGMEM =
 #define  XTAL1    3 
 #define  ORIGPAGEL 19
 #define  ECJUMPER 18
+// HVSP pins
+#define  SCI    RDY // note that the direction must be changed!
+#define  SDO    BS1
+#define  SII    XA0
+#define  SDI    ORIGXA1
+// special values to control the VCC line
+#define  VCCOFF   HIGH
+#define  VCCON    LOW
+#else
+/* pin assignment for Arduino board */
+/************************************/
+#define  VCC       12
+#define  RST       13
+
+#define  RDY       A4 
+#define  OE        A3 
+#define  WR        A2 
+#define  BS1       A1
+#define  BS2       A5
+#define  XA0       10
+#define  ORIGXA1   11
+#define  XTAL1     A0
+#define  ORIGPAGEL BS1 // is actually not used and tied to GND
+// HVSP pins
+#define  SCI       A5
+#define  SDO       A2
+#define  SII       A1
+#define  SDI       A0
+// special values to control the VCC line
+#define  VCCOFF    LOW
+#define  VCCON     HIGH
+
+#endif
 
 // These pin assignments change depending on which chip is being programmed
 byte PAGEL = ORIGPAGEL; // ATtiny2313: PAGEL = BS1
 byte XA1 = ORIGXA1; // ATtiny2313: XA1 = BS2
 
-// Pin assignments for HVSP mode 
-#define  SCI    RDY // note that the direction must be changed!
-#define  SDO    BS1
-#define  SII    XA0
-#define  SDI    ORIGXA1
 
 // Serial instructions for HVSP mode
 // Based on the ATtiny85 datasheet Table 20-16 pg. 163-165.
@@ -264,26 +313,30 @@ byte XA1 = ORIGXA1; // ATtiny2313: XA1 = BS2
 
 
 // Internal definitions
-enum modelist { ATMEGA, TINY2313, HVSP };
-enum fusesel { LFUSE_SEL, HFUSE_SEL, EFUSE_SEL, LOCK_SEL };
-enum ledcolor { RED, GREEN };
+enum { ATMEGA, TINY2313, HVSP };
+enum { LFUSE_SEL, HFUSE_SEL, EFUSE_SEL, LOCK_SEL };
+enum { RED, GREEN };
 
 // Global variables
 byte mcu_mode;  // programming mode
-byte mcu_fuses = 0;
+byte mcu_fuses = 0; // number of fuses for the actual chip
 boolean interactive_mode = true; // interaction over terminal
-int mcu_index = -1;
-unsigned long mcu_signature = 0;
+int mcu_index = -1; // index into mcu_types array - see above
+unsigned long mcu_signature = 0; // signature as read from chip
+boolean ec_allowed = true; // whether chip erase is allowed - only relevant for FBD
+
 
 void setup() { // run once, when the sketch starts
   char modec = ' ';
   
   // Set up control lines for HV parallel programming
   
-  PORTB = 0;
-  DDRB = 0;
+  setData(0);
+  setDataDirection(INPUT);
 
-  pinMode(ECJUMPER, INPUT_PULLUP);
+#ifdef FBD_MODE
+  pinMode(ECJUMPER, INPUT_PULLUP); // the jumper that allows chip erase
+#endif
   pinMode(VCC, OUTPUT);
   pinMode(RDY, INPUT);
   pinMode(OE, OUTPUT);
@@ -296,36 +349,48 @@ void setup() { // run once, when the sketch starts
   pinMode(BS2, OUTPUT);
   pinMode(XTAL1, OUTPUT);
 
+#ifdef FBD_MODE
   if (digitalRead(0) == LOW)
   interactive_mode = false; // no RS232 connection!
-  
+#endif
 
   // Initialize output pins as needed
-  digitalWrite(RST, LOW);  // Turn off 12V step-up converter (non-inverting, unlike original circuit)
-  digitalWrite(VCC, HIGH); // Turn off VCC
+  digitalWrite(RST, LOW);  // Turn off 12V 
+
+  digitalWrite(VCC, VCCOFF); // Turn off VCC
 
   Serial.begin(BAUD);  // Open serial port
   Serial.println();
   Serial.println();
   Serial.print(F("RescueAVR Version "));
   Serial.print(VERSION);
-  if (interactive_mode) Serial.println(F(" / interactive"));
-  else Serial.println(F(" / non-interactive"));
+  if (interactive_mode) Serial.print(F(" / interactive, "));
+  else Serial.print(F(" / non-interactive, "));
+#ifdef FBD_MODE
+  Serial.println(F("running on Fusebit-Doctor Board"));
+#else
+  Serial.println(F("running on Arduino"));
+#endif
   Serial.println();
 
   for (mcu_mode = ATMEGA; mcu_mode <= HVSP; mcu_mode++) {
     enterHVProgMode(mcu_mode);
     mcu_signature = readSig(mcu_mode);
     leaveHVProgMode();
+    Serial.print(F("DEBUG: SIG="));
+    Serial.println(mcu_signature,HEX);
     if ((mcu_signature>>16) == 0x1E) break;
   }
   if (mcu_mode > HVSP) {
     Serial.println(F("No chip found!"));
-    Serial.println(F("Insert chip and press button or give details."));
+#ifndef FBD_MODE
+    Serial.println(F("Check wiring and try again."));
+    Serial.println();
+    while (true) ;
+#endif
+    Serial.println(F("Insert chip and reset or give details."));
     if (!interactive_mode) {
-      ledOn(RED);
-      delay(3000);
-      ledOff(RED);
+      showLed(true,false,3000); // 3 secs of red
       while (true) { };
     }
     while (Serial.available()) Serial.read();
@@ -363,9 +428,7 @@ void setup() { // run once, when the sketch starts
       printMCUName(mcu_index);
       Serial.print(F(" / "));
       if (!interactive_mode) {
-        ledOn(GREEN);
-        delay(1500);
-        ledOff(GREEN);
+        showLed(false,true,1000);
       } 
       mcu_index = -1;
     }
@@ -373,14 +436,9 @@ void setup() { // run once, when the sketch starts
   if (mcu_index < 0 ) {
     Serial.println(F("Unknown"));
     if (!interactive_mode) {
-      ledOn(RED);
-      delay(3000);
-      ledOff(RED);
+      showLed(true,false,3000); // 3 secs of red
       while (true) { };
     } else {
-      ledOn(RED);
-      delay(1500);
-      ledOff(RED);
       mcu_fuses = 0;
       while (Serial.available()) Serial.read();
       while (mcu_fuses < 1 || mcu_fuses > 3) {
@@ -396,10 +454,7 @@ void setup() { // run once, when the sketch starts
     printMCUName(mcu_index);
     Serial.println();
     mcu_fuses = (pgm_read_word(&(mcu_types[mcu_index][1]))>>8);
-    ledOn(GREEN);
-    if (interactive_mode) delay(1500);
-    else delay(3000);
-    ledOff(GREEN);
+    if (!interactive_mode) showLed(false,true,3000); // 3 secs of green
   }
 }
 
@@ -431,8 +486,10 @@ void loop() {  // run over and over again
 
   if (interactive_mode) {
     while (true) {
+      while (Serial.available()) Serial.read();
       Serial.println();
       Serial.println(F("Choose:"));
+      if (mcu_index >= 0) Serial.println(F("  R - Try to resurrect chip by all means"));
       Serial.println(F("  E - Erase chip"));
       if (mcu_index >= 0) Serial.println(F("  D - Burn default fuse values"));
       Serial.println(F("  L - Change low fuse"));
@@ -446,111 +503,175 @@ void loop() {  // run over and over again
       Serial.println(action);
       
       if (action == 'E' || action == 'D' || action == 'L' ||
-          action == 'H' || action == 'X' || action == 'K') break;
-      Serial.print("'");
-      Serial.print(action);
-      Serial.println("' is not a valid command char.");
+          action == 'H' || action == 'X' || action == 'K' || action == 'R') break;
+      if (action >= ' ') {
+        Serial.print("'");
+        Serial.print(action);
+        Serial.println("' is not a valid command char.");
+      }
     }
   
     enterHVProgMode(mcu_mode);
     switch (action) {
+    case 'R':
+      if (mcu_index >= 0) resurrection(dlfuse, dhfuse, defuse);
+      break;
     case 'E': 
-      if (digitalRead(ECJUMPER) == LOW) {
-        Serial.println(F("\nErasing ..."));
+#ifdef FBD_MODE
+      ec_allowed = (digitalRead(ECJUMPER) == LOW);
+#endif
+      if (ec_allowed) {
+        Serial.print(F("\nErasing chip ..."));
         eraseChip(mcu_mode); 
-        Serial.println(F("...done"));
+        verifyOneByte(LOCK_SEL, 0xFF, "erasing chip");
       }
       else Serial.println(F("'Erase chip' is not allowed"));
       break;
     case 'D': 
       if (mcu_index >= 0) {
-        Serial.println(F("\nBurning ..."));
+        Serial.print(F("\nSetting fuses ... "));
         burnFuse(mcu_mode, dlfuse, LFUSE_SEL);
         if (mcu_fuses > 1) burnFuse(mcu_mode, dhfuse, HFUSE_SEL);
         if (mcu_fuses > 2) burnFuse(mcu_mode, defuse, EFUSE_SEL);
-        Serial.println(F("...done"));
+        showLed(true,true,600);
+        Serial.println(F("done"));
+        delay(100);
+        Serial.print(F("Verifying ... "));
+        lfuse = readFuse(mcu_mode,LFUSE_SEL);
+        if (mcu_fuses > 1) hfuse = readFuse(mcu_mode,HFUSE_SEL);
+        if (mcu_fuses > 2) efuse = readFuse(mcu_mode,EFUSE_SEL);
+        showLed(true,true,600);
+        if (verifyFuses(mcu_fuses,
+                        0xFF,0xFF,
+                        lfuse,dlfuse,
+                        hfuse,dhfuse,
+                        efuse,defuse)) {
+          Serial.println(F("done: Sucessfully set all fuses to default values"));
+        } else {
+          Serial.println(F("done: FAILED TO SET FUSES\x07"));
+        }
       }
       break;
-    case 'L': Serial.print(F("New low fuse: "));
-      lfuse = askByte();
-      Serial.println(F("\nBurning ..."));
-      burnFuse(mcu_mode, lfuse, LFUSE_SEL);
-      Serial.println(F("...done"));
+    case 'L': setAndVerifyOneByte(LFUSE_SEL, "setting low fuse");
       break;
     case 'H': 
       if (mcu_fuses > 1) {
-        Serial.print(F("New high fuse: "));
-        hfuse = askByte();
-        Serial.println(F("\nBurning ..."));
-        burnFuse(mcu_mode, hfuse, HFUSE_SEL);
-        Serial.println(F("...done"));
+        setAndVerifyOneByte(HFUSE_SEL, "setting high fuse");
       }
       break;
     case 'X':
       if (mcu_fuses > 2) {
-        Serial.print(F("New extended fuse: "));
-        efuse = askByte();
-        Serial.println(F("\nBurning ..."));
-        burnFuse(mcu_mode, efuse, EFUSE_SEL);
-        Serial.println(F("...done"));
+        setAndVerifyOneByte(EFUSE_SEL, "setting extended fuse");
       }
       break;
     case 'K':
-      Serial.print(F("New lock byte: "));
-      lock = askByte();
-      Serial.println(F("\nBurning ..."));
-      burnFuse(mcu_mode, lock, LOCK_SEL);
-      Serial.println(F("...done"));
+      setAndVerifyOneByte(LOCK_SEL, "setting lock byte");
       break;
     }
     Serial.println();
     leaveHVProgMode();
   } else { // non-interactive mode
-
-    Serial.println(F("Start programming..."));
-    enterHVProgMode(mcu_mode);
-
-    // try to reset all locks
-    Serial.println(F("Reset locks - if possible..."));
-    burnFuse(mcu_mode, 0xFF, LOCK_SEL);
-
-    // remove lock by erasing chip - if necessary and allowed
-    lock = readFuse(mcu_mode, LOCK_SEL);
-    if (lock != 0xFF && digitalRead(ECJUMPER) == LOW) {
-      Serial.println(F("Erase chip ..."));
-      eraseChip(mcu_mode); 
-    }
-    // try to reset fuses
-    Serial.println(F("Set fuses to default values..."));
-    burnFuse(mcu_mode, dlfuse, LFUSE_SEL);
-    if (mcu_fuses > 1) burnFuse(mcu_mode, dhfuse, HFUSE_SEL);
-    if (mcu_fuses > 2) burnFuse(mcu_mode, defuse, EFUSE_SEL);
-    delay(100);
-    // see whether successful
-    lock = readFuse(mcu_mode, LOCK_SEL);
-    lfuse = readFuse(mcu_mode,LFUSE_SEL);
-    if (mcu_fuses > 1) hfuse = readFuse(mcu_mode,HFUSE_SEL);
-    if (mcu_fuses > 2) efuse = readFuse(mcu_mode,EFUSE_SEL);
-    
-    leaveHVProgMode();
-    // if successul blink green, otherwise blink red
-    Serial.println(F("Verify fuse settings..."));
-    if (verifyFuses(mcu_fuses,
-                    lock,0xFF,
-                    lfuse,dlfuse,
-                    hfuse,dhfuse,
-                    efuse,defuse)) {
-      Serial.println(F("-> successful"));
-      ledBlink(GREEN,5);
-    } else {
-      Serial.println(F("-> unsuccessful"));
-      ledBlink(RED,5);
-    }
+    resurrection(dlfuse, dhfuse, defuse);
     Serial.println(F("Bye, bye ..."));
     while (true) { };
   }
 }
 
+void resurrection(byte dlf, byte dhf, byte def) {
+  byte lf, hf, ef, lk;
+  
+  Serial.println(F("Start HV programming mode..."));
+  enterHVProgMode(mcu_mode);
+  showLed(true,true,400);
+  
+  // try to reset all locks
+  Serial.println(F("Reset lock byte - if possible..."));
+  burnFuse(mcu_mode, 0xFF, LOCK_SEL);
+  showLed(true,false,200);
+  showLed(false,true,200);
+  
+  // remove lock by erasing chip - if necessary and allowed
+  lk = readFuse(mcu_mode, LOCK_SEL);
+#ifdef FBD_MODE
+  ec_allowed = (digitalRead(ECJUMPER) == LOW);
+#endif
+  if (lk != 0xFF && ec_allowed) {
+    Serial.println(F("Lock byte could not be changed. Erase chip ..."));
+    eraseChip(mcu_mode); 
+    showLed(true,true,400);
+  }
+  // try to reset fuses
+  Serial.println(F("Set fuses to default values ..."));
+  burnFuse(mcu_mode, dlf, LFUSE_SEL);
+  if (mcu_fuses > 1) burnFuse(mcu_mode, dhf, HFUSE_SEL);
+  if (mcu_fuses > 2) burnFuse(mcu_mode, def, EFUSE_SEL);
+  showLed(true,true,400);
+  
+  // see whether successful
+  lk = readFuse(mcu_mode, LOCK_SEL);
+  lf = readFuse(mcu_mode,LFUSE_SEL);
+  if (mcu_fuses > 1) hf = readFuse(mcu_mode,HFUSE_SEL);
+  if (mcu_fuses > 2) ef = readFuse(mcu_mode,EFUSE_SEL);
+  
+  leaveHVProgMode();
+  // if successful blink green, otherwise blink red
+  Serial.println(F("Verify fuse settings..."));
+  showLed(true,false,100);
+  showLed(false,true,100);
+  showLed(true,false,100);
+  showLed(false,true,100);
+  showLed(true,false,100);
+  showLed(false,true,100);
+  if (verifyFuses(mcu_fuses,
+                  lk,0xFF,
+                  lf,dlf,
+                  hf,dhf,
+                  ef,def)) {
+    Serial.println(F("-> Resurrection was successful!"));
+    ledBlink(GREEN,5);
+  } else {
+    Serial.println(F("-> Resurrection FAILED!"));
+    if (!ec_allowed) 
+      Serial.println(F("Try again with 'erase chip' jumper set"));
+    ledBlink(RED,5);
+  }
+}
+
+
+void setAndVerifyOneByte(int SEL, char* mess) {
+  int toburn;
+
+  while (Serial.available()) Serial.read();
+  Serial.print(F("New "));
+  Serial.print(mess);
+  Serial.print(F(" : "));
+  toburn = askByte();
+  if (toburn >= 0x00) {
+    Serial.print(F("\nSetting "));
+    Serial.print(mess);
+    Serial.print(F(" ... "));
+    burnFuse(mcu_mode, toburn, SEL);
+    verifyOneByte(SEL, toburn, mess);
+  }
+}
+
+void verifyOneByte(int SEL, byte desired, char* mess) {
+  byte newval;
+
+  showLed(true,true,600);
+  Serial.println(F(" done"));
+  delay(200);
+  Serial.print(F("Verifying ... "));
+  newval = readFuse(mcu_mode,SEL);
+  showLed(true,true,600);
+  if (newval == desired) {
+    Serial.print(F("done: Successful in "));
+  } else {
+    Serial.print(F("done: FAILED in \x07"));
+  }
+  Serial.println(mess);
+}
+  
 
 
 int searchMCU(unsigned long sig) {
@@ -599,6 +720,7 @@ void eraseChip(int mode) {
 }
 
 void enterHVProgMode(int mode) {
+  
   // Initialize pins to enter programming mode
   if (mode == TINY2313) {
     PAGEL = BS1;
@@ -607,10 +729,9 @@ void enterHVProgMode(int mode) {
     PAGEL = ORIGPAGEL;
     XA1 = ORIGXA1;
   }
-   
-
-  PORTB = 0;
-  DDRB = 0;
+  
+  setData(0);
+  setDataDirection(INPUT);
   digitalWrite(PAGEL, LOW);
   digitalWrite(XA1, LOW);
   digitalWrite(XA0, LOW);
@@ -621,16 +742,20 @@ void enterHVProgMode(int mode) {
   delay(100); // to let it settle, since otherwise Vcc may be already high due to XA1 high
  
   if(mode == HVSP) {
+    pinMode(SCI,OUTPUT);
+    pinMode(SDI,OUTPUT);
+    pinMode(SII,OUTPUT);
+    pinMode(SDO,OUTPUT);
     digitalWrite(SDI, LOW);  // set necessary pin values to enter programming mode
     digitalWrite(SII, LOW);
     digitalWrite(SDO, LOW);  // needs to be low to enter programming mode
-    pinMode(SCI, OUTPUT);    // SCI is same as RDY pin
+    digitalWrite(SCI, LOW);
   }
   
   // Enter programming mode
-  digitalWrite(VCC, LOW);  // Apply VCC to start programming process
+  digitalWrite(VCC, VCCON);  // Apply VCC to start programming process
   delayMicroseconds(80);
-  digitalWrite(RST, HIGH);   // Apply 12V to !RESET thru level shifter
+  digitalWrite(RST, HIGH);   // Apply 12V to !RESET 
   
   if(mode == HVSP) {
     // reset SDO after short delay, longer leads to logic contention because target sets SDO high after entering programming mode
@@ -645,8 +770,8 @@ void enterHVProgMode(int mode) {
 }
 
 void leaveHVProgMode() {
-  PORTB = 0;
-  DDRB = 0;
+  setData(0);
+  setDataDirection(INPUT);
   
   PAGEL = ORIGPAGEL;
   XA1 = ORIGXA1;
@@ -660,8 +785,9 @@ void leaveHVProgMode() {
   digitalWrite(XA0, LOW);
   digitalWrite(BS1, LOW);
   digitalWrite(BS2, LOW);
-  digitalWrite(VCC, HIGH);
+  digitalWrite(VCC, VCCOFF);
 }
+
 
 void eraseHVPP(int mode) {
   
@@ -671,15 +797,16 @@ void eraseHVPP(int mode) {
   digitalWrite(WR, HIGH);
   //delay(100);
   
-  while(digitalRead(RDY) == LOW);  // when RDY goes high, burn is done
+  waitForHigh(RDY); // when RDY goes high, we are done
 }
   
 void eraseHVSP(void) {
   HVSP_write(HVSP_ERASE_CHIP_DATA, HVSP_ERASE_CHIP_INSTR1);
   HVSP_write(0x00, HVSP_ERASE_CHIP_INSTR2);
   HVSP_write(0x00, HVSP_ERASE_CHIP_INSTR3);
-  while (digitalRead(SDO) == LOW) { };
+  waitForHigh(SDO); 
 }
+
 
 void burnHVPPFuse(int mode, byte fuse, int select)  // write high or low fuse to AVR
 {
@@ -698,13 +825,13 @@ void burnHVPPFuse(int mode, byte fuse, int select)  // write high or low fuse to
   delay(1);
   
   // Load fuse value into target
-  PORTB = fuse;
-  DDRB = 0xFF;
+  setData(fuse);
+  setDataDirection(OUTPUT);
   
   strobe_xtal();  // latch DATA
 
-  PORTB = 0;
-  DDRB = 0;
+  setData(0);
+  setDataDirection(INPUT);
    
   // Decide which fuse location to burn
   switch (select) { 
@@ -728,7 +855,7 @@ void burnHVPPFuse(int mode, byte fuse, int select)  // write high or low fuse to
   digitalWrite(WR, HIGH);
   //delay(100);
   
-  while(digitalRead(RDY) == LOW);  // when RDY goes high, burn is done
+  waitForHigh(RDY); // when RDY goes high, we are done
   
   // Reset control lines to original state
   digitalWrite(BS1, LOW);
@@ -766,7 +893,7 @@ void burnHVSPFuse(byte fuse, int select) {
     HVSP_write(0x00, HVSP_WRITE_LOCK_INSTR4);
     break;
   }
-  while(digitalRead(SDO) == LOW);
+  waitForHigh(SDO); 
   return;
 }
 
@@ -777,8 +904,8 @@ byte readHVPPFuse(int mode, int select) {
   sendHVPPCmdOrAddr(mode,true,B00000100);  // Send command to read fuse bits
   
   // Configure DATA as input so we can read back fuse values from target
-  PORTB = 0;
-  DDRB = 0;
+  setData(0);
+  setDataDirection(INPUT);
 
   // Set control lines
   switch (select) {
@@ -808,7 +935,7 @@ byte readHVPPFuse(int mode, int select) {
   digitalWrite(OE, LOW);
   delay(1);
   
-  fuse = PINB;
+  fuse = getData();
   
   digitalWrite(OE, HIGH);  // Done reading, disable output enable line
   return fuse;
@@ -851,20 +978,20 @@ unsigned long readHVPPSig(int mode) {
   unsigned long result = 0;
 
   // Configure DATA as input so we can read back fuse values from target
-  PORTB = 0;
-  DDRB = 0;
-  
+  setData(0);
+  setDataDirection(INPUT);
   for (byte i=0;i<3;i++) {
     sendHVPPCmdOrAddr(mode,true,B00001000);
     sendHVPPCmdOrAddr(mode,false,i);
     digitalWrite(BS1,LOW);
     digitalWrite(OE, LOW);
     delay(1);
-    result = (result<<8)+PINB;
+    result = (result<<8)+getData();
     digitalWrite(OE, HIGH); 
   }
   return result;
 }
+
 
 unsigned long readHVSPSig() {
 
@@ -976,14 +1103,22 @@ void sendHVPPCmdOrAddr(int mode, boolean is_cmd, byte cmd_or_addr)  // Send comm
   if (mode != TINY2313)
     digitalWrite(BS2, LOW);  // Command load seems not to work if BS2 is high 
   
-  PORTB = cmd_or_addr;
-  DDRB = 0xFF;
+  setData(cmd_or_addr);
+  setDataDirection(OUTPUT);
   
   strobe_xtal();  // latch DATA
   
-  PORTB = 0;
-  DDRB = 0;
+  setData(0);
+  setDataDirection(INPUT);
   digitalWrite(XA1, LOW);
+}
+
+void waitForHigh(byte signal) {
+  for (int i=0; i<1000; i++) {
+    if (digitalRead(signal) == HIGH) return;
+    delay(1);
+  }
+  Serial.println(F("Timeout during write operation"));
 }
 
 
@@ -1005,28 +1140,75 @@ void strobe_xtal(void) {  // strobe xtal (usually to latch data on the bus)
   digitalWrite(XTAL1, LOW);
 }
 
+void setDataDirection(int dir) {
+#ifdef FBD_MODE
+  if (dir == INPUT) DDRB = 0;
+  else DDRB = 0xFF;
+#else
+  for (byte pin = 2; pin < 10; pin++) pinMode(pin,dir);
+#endif
+}
+
+byte getData(void) {
+#ifdef FBD_MODE
+  return PINB;
+#else
+  byte res = 0;
+  for (byte pin = 2; pin < 10; pin++) 
+    res = (res<<1)+digitalRead(pin);
+  return(res);
+#endif
+}
+    
+void setData(byte data) {
+#ifdef FBD_MODE
+  PORTB = data;
+#else
+  for (byte pin = 2; pin < 10; pin++) {
+    digitalWrite(pin,((data&B10000000) != 0));
+    data = data << 1;
+  }
+#endif
+}
+
+
 
 int askByte(void) {  // get new byte value
   char serbuffer[2];
   byte i = 0;
   char next;
   
-  while (i < 2) {
+  while (i <= 2) {
     while (Serial.available() == 0);   // wait for a character to come in
     next = Serial.read();
-    if (i == 1 && (next == '\b' || next == '\x7F')) {
-      Serial.print("\b \b");
-      i = 0;
+    if (i <= 2 && (next == '\b' || next == '\x7F')) {
+      if (i > 0) {
+        Serial.print("\b \b");
+        i--;
+      }
+    } else {
+      if (i == 2) {
+        if (next == ' ' || next == '\r' || next == '\n') break;
+        else { 
+          Serial.println(F("\nInvalid end-of-line character"));
+          return -1;
+        }
+      } else {
+        if (next >= 'a' && next <= 'f') next = toupper(next);
+        if ((next >= '0' && next <= '9') || (next >= 'A' && next <= 'F')) {
+          serbuffer[i++] = next;
+          Serial.print(next);
+        } else {
+          Serial.println(F("Invalid hexadecimal character"));
+          return -1;
+        }
+      }
     }
-    if (next >= 'a' && next <= 'f') next = toupper(next);
-    if ((next >= '0' && next <= '9') || (next >= 'A' && next <= 'F')) {
-      serbuffer[i++] = next;
-      Serial.print(next);
-    } 
   }
   Serial.println();
   return(hex2dec(serbuffer[1]) + hex2dec(serbuffer[0]) * 16);
 }
+
 
 int hex2dec(byte c) { // converts one HEX character into a number
   if (c >= '0' && c <= '9') {
@@ -1064,32 +1246,29 @@ void print2Hex(byte val, boolean blank)
   if (blank) Serial.print(' ');
 }
 
-void ledOn(int color) 
+void showLed(boolean red, boolean green, unsigned int time) 
 {
-  switch (color) {
-  case RED: digitalWrite(XA0,HIGH);
-    break;
-  case GREEN: digitalWrite(XA1,HIGH);
-    break;
-  }
+#ifdef FBD_MODE
+  if (red) digitalWrite(XA0,HIGH);
+  if (green) digitalWrite(ORIGXA1,HIGH);
+#endif
+  delay(time);
+#ifdef FBD_MODE
+  digitalWrite(XA0,LOW);
+  digitalWrite(ORIGXA1,LOW);
+#endif
 }
 
-void ledOff(int color) 
-{
-  switch (color) {
-  case RED: digitalWrite(XA0,LOW);
-    break;
-  case GREEN: digitalWrite(XA1,LOW);
-    break;
-  }
-}
-
-void ledBlink(int color,int sec) {
+void ledBlink(byte color,byte sec) {
   
-  for (int i=0; i < 5*sec; i++) {
-    ledOn(color);
-    delay(100);
-    ledOff(color);
-    delay(100);
+#ifdef FBD_MODE
+  for (int i=0; i < 10*sec; i++) {
+    if (color == RED) digitalWrite(XA0,HIGH);
+    else digitalWrite(XA1,HIGH);
+    delay(50);
+    digitalWrite(XA0,LOW);
+    digitalWrite(XA1,LOW);
+    delay(50);
   }
+#endif
 }
