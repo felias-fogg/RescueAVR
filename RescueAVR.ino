@@ -2,7 +2,7 @@
 
 //  Title:        RescueAVR
 
-#define VERSION  "2.0"
+#define VERSION  "2.1"
 
 /*
   based on Jeff Keyzer's HVRescue_Shield and manekinen's Fusebit Doctor.
@@ -305,6 +305,13 @@ byte XA1 = ORIGXA1; // ATtiny2313: XA1 = BS2
 #define HVSP_READ_SIG_INSTR3     B01101000
 #define HVSP_READ_SIG_INSTR4     B01101100
 
+// OSCCAL read
+#define HVSP_READ_OSC_DATA       B00001000
+#define HVSP_READ_OSC_INSTR1     B01001100
+#define HVSP_READ_OSC_INSTR2     B00001100
+#define HVSP_READ_OSC_INSTR3     B01111000
+#define HVSP_READ_OSC_INSTR4     B01111100
+
 // Erase chip
 #define HVSP_ERASE_CHIP_DATA     B10000000
 #define HVSP_ERASE_CHIP_INSTR1   B01001100
@@ -460,7 +467,7 @@ void setup() { // run once, when the sketch starts
 
 void loop() {  // run over and over again
   
-  byte hfuse, lfuse, efuse, lock;  // fuse and lock values
+  byte hfuse, lfuse, efuse, lock, osccal;  // fuse and lock values
   byte dhfuse, dlfuse, defuse;  // default values
   char action = ' ';
   
@@ -476,12 +483,14 @@ void loop() {  // run over and over again
   if (mcu_fuses > 1) hfuse = readFuse(mcu_mode,HFUSE_SEL);
   if (mcu_fuses > 2) efuse = readFuse(mcu_mode,EFUSE_SEL);
   lock = readFuse(mcu_mode,LOCK_SEL);
+  osccal = readOSCCAL(mcu_mode);
   leaveHVProgMode();
 
   printFuses("Current ",mcu_fuses,lfuse,hfuse,efuse);
   if (mcu_index >= 0) printFuses("Default ",mcu_fuses,dlfuse,dhfuse,defuse);
 
   printLock(lock);
+  printOSCCAL(osccal);
  
 
   if (interactive_mode) {
@@ -703,6 +712,13 @@ unsigned long readSig(int mode) {
   if (mode == HVSP) return readHVSPSig();
   else return readHVPPSig(mode);
 }
+
+byte readOSCCAL(int mode) {
+  if (mode == HVSP) return readHVSPOSCCAL();
+  else return readHVPPOSCCAL(mode);
+}
+
+
 
 byte readFuse(int mode, int selection) {
   if (mode == HVSP) return readHVSPFuse(selection);
@@ -993,6 +1009,21 @@ unsigned long readHVPPSig(int mode) {
 }
 
 
+byte readHVPPOSCCAL(int mode) {
+  byte result;
+
+  setData(0);
+  setDataDirection(INPUT);
+  sendHVPPCmdOrAddr(mode,true,B00001000);
+  sendHVPPCmdOrAddr(mode,false,0);
+  digitalWrite(BS1,LOW);
+  digitalWrite(OE, LOW);
+  delay(1);
+  result = getData();
+  digitalWrite(OE, HIGH); 
+  return result;
+}
+
 unsigned long readHVSPSig() {
 
   unsigned long result = 0;
@@ -1005,6 +1036,14 @@ unsigned long readHVSPSig() {
   }
   return result;
 }
+
+byte readHVSPOSCCAL() {
+  HVSP_read(HVSP_READ_OSC_DATA, HVSP_READ_OSC_INSTR1);
+  HVSP_read(0x00, HVSP_READ_OSC_INSTR2);
+  HVSP_read(0x00, HVSP_READ_OSC_INSTR3);
+  return HVSP_read(0x00, HVSP_READ_OSC_INSTR4);
+}
+
 
 
 byte HVSP_read(byte data, byte instr) { // Read a byte using the HVSP protocol
@@ -1235,6 +1274,12 @@ void printFuses(char *str, byte num, byte l, byte h, byte e) {
 
 void printLock(byte l) {
   Serial.print(F("Current lock byte:   "));
+  print2Hex(l,true);
+  Serial.println();
+}
+
+void printOSCCAL(byte l) {
+  Serial.print(F("Oscillator calibr.:  "));
   print2Hex(l,true);
   Serial.println();
 }
