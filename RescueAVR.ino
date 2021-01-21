@@ -2,12 +2,12 @@
 
 //  Title:        RescueAVR
 
-#define VERSION  "2.1"
+#define VERSION  "2.3"
 
 /*
   based on Jeff Keyzer's HVRescue_Shield and manekinen's Fusebit Doctor.
 
-  It uses the hardware dsigned by manekinen but the software is completely
+  It uses the hardware designed by manekinen but the software is completely
   new, using ideas und snippets from  Jeff Keyzer's sketch HVRescue_Shield.
   In addition, the program can also be run on a native Arduino, provided
   12V are supplied and the target chip is connected to the right Arduino
@@ -30,9 +30,13 @@
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Version 2.3 (21.1.2021)
+  - added support for ATtiny1634
+  - corrected the code for reading the OSCCAL value
+  - added 'R - Restart' to all menus (and changed resurrect to 'T')
 */
 
 /* Uncomment one of the following two lines, if you do not want to
@@ -49,6 +53,7 @@
 #endif
 
 #include <avr/pgmspace.h>
+#include <avr/wdt.h>
 
 // communication speed 
 #define  BAUD         19200    // Serial port rate at which to talk to PC
@@ -78,6 +83,7 @@ const char attiny26[] PROGMEM = "ATtiny26";
 const char attiny261[] PROGMEM = "ATtiny261";
 const char attiny461[] PROGMEM = "ATtiny461";
 const char attiny861[] PROGMEM = "ATtiny861";
+const char attiny1634[] PROGMEM = "ATtiny1634";
 const char attiny28[] PROGMEM = "ATtiny28";
 const char attiny48[] PROGMEM = "ATtiny48";
 const char attiny88[] PROGMEM = "ATtiny88";
@@ -123,7 +129,7 @@ const char atmega328p[] PROGMEM = "ATmega328P";
 // 2nd word LSB: low fuse, 3rd word MSB: high fuse, 3rd word LSB: extended fuse,
 // 4th word string address. 
 
-#define MCU_NUM 62
+#define MCU_NUM 63
 const uint16_t mcu_types[MCU_NUM][4] PROGMEM =
   { 
     { 0x9101, 0x01FF, 0x0000, (uint16_t)at90s2313 },
@@ -134,59 +140,60 @@ const uint16_t mcu_types[MCU_NUM][4] PROGMEM =
     { 0x9301, 0x01FF, 0x0000, (uint16_t)at90s8515 },
     { 0x9303, 0x01FF, 0x0000, (uint16_t)at90s8535 },
     { 0x9004, 0x01FF, 0x0000, (uint16_t)attiny11 },
-    { 0x9005, 0x01FF, 0x0000, (uint16_t)attiny12 },
+    { 0x9005, 0x0152, 0x0000, (uint16_t)attiny12 },
     { 0x9007, 0x026A, 0xFF00, (uint16_t)attiny13 },
-    { 0x9006, 0x01FF, 0x0000, (uint16_t)attiny15 },
-    { 0x910A, 0x0364, 0xDFFF, (uint16_t)attiny2313 },
-    { 0x920D, 0x0364, 0xDFFF, (uint16_t)attiny4313 },
+    { 0x9006, 0x015C, 0x0000, (uint16_t)attiny15 },
+    { 0x910A, 0x0362, 0xDFFF, (uint16_t)attiny2313 },
+    { 0x920D, 0x0362, 0xDFFF, (uint16_t)attiny4313 },
     { 0x910B, 0x0362, 0xDFFF, (uint16_t)attiny24 },
     { 0x9207, 0x0362, 0xDFFF, (uint16_t)attiny44 },
     { 0x930C, 0x0362, 0xDFFF, (uint16_t)attiny84 },
     { 0x9108, 0x0362, 0xDFFF, (uint16_t)attiny25 },
     { 0x9206, 0x0362, 0xDFFF, (uint16_t)attiny45 },
     { 0x930B, 0x0362, 0xDFFF, (uint16_t)attiny85 },
-    { 0x9109, 0x0241, 0xF700, (uint16_t)attiny26 },
+    { 0x9109, 0x02E1, 0xF700, (uint16_t)attiny26 },
     { 0x910C, 0x0362, 0xDFFF, (uint16_t)attiny261 },
     { 0x9208, 0x0362, 0xDFFF, (uint16_t)attiny461 },
     { 0x930D, 0x0362, 0xDFFF, (uint16_t)attiny861 },
+    { 0x9412, 0x0362, 0xDFFF, (uint16_t)attiny1634 },
     { 0x9107, 0x01FF, 0x0000, (uint16_t)attiny28 },
-    { 0x9209, 0x036E, 0xDFFF, (uint16_t)attiny48 },
-    { 0x9311, 0x036E, 0xDFFF, (uint16_t)attiny88 },
-    { 0x9306, 0x02C1, 0xD900, (uint16_t)atmega8515 },
-    { 0x9308, 0x02C1, 0xD900, (uint16_t)atmega8535 },
+    { 0x9209, 0x0362, 0xDFFF, (uint16_t)attiny48 },
+    { 0x9311, 0x0362, 0xDFFF, (uint16_t)attiny88 },
+    { 0x9306, 0x02E1, 0xD900, (uint16_t)atmega8515 },
+    { 0x9308, 0x02E1, 0xD900, (uint16_t)atmega8535 },
     { 0x9307, 0x02E1, 0xD900, (uint16_t)atmega8 },
     { 0x9310, 0x01DF, 0x0000, (uint16_t)atmega8hva },
     { 0x9403, 0x02E1, 0x9900, (uint16_t)atmega16 },
     { 0x940c, 0x01DF, 0x0000, (uint16_t)atmega16hva },
-    { 0x940d, 0x02DE, 0xE900, (uint16_t)atmega16hvb },
+    { 0x940d, 0x02DD, 0xE900, (uint16_t)atmega16hvb },
     { 0x9502, 0x02E1, 0x9900, (uint16_t)atmega32 },
-    { 0x9586, 0x0341, 0xD9F9, (uint16_t)atmega32c1 },
-    { 0x9510, 0x02DE, 0xE900, (uint16_t)atmega32hvb },
-    { 0x9602, 0x03C1, 0x99FF, (uint16_t)atmega64 },
-    { 0x9686, 0x0341, 0xD9F9, (uint16_t)atmega64c1 },
-    { 0x9610, 0x02D6, 0xF900, (uint16_t)atmega64hev2 },
-    { 0x9684, 0x0341, 0xD9F9, (uint16_t)atmega64m1 },
-    { 0x9702, 0x03C1, 0x99FD, (uint16_t)atmega128 },
-    { 0x9701, 0x03C1, 0x99FD, (uint16_t)atmega128rfa1 },
+    { 0x9586, 0x0362, 0xD9F9, (uint16_t)atmega32c1 },
+    { 0x9510, 0x02DD, 0xE900, (uint16_t)atmega32hvb },
+    { 0x9602, 0x03E1, 0x99FD, (uint16_t)atmega64 },
+    { 0x9686, 0x0362, 0xD9FF, (uint16_t)atmega64c1 },
+    { 0x9610, 0x02D7, 0xF900, (uint16_t)atmega64hev2 },
+    { 0x9684, 0x0362, 0xD9FF, (uint16_t)atmega64m1 },
+    { 0x9702, 0x03E1, 0x99FD, (uint16_t)atmega128 },
+    { 0x9701, 0x0362, 0x99FF, (uint16_t)atmega128rfa1 },
     { 0x9404, 0x0362, 0x99FF, (uint16_t)atmega162 },
     { 0x9205, 0x0362, 0xDFFF, (uint16_t)atmega48 },
     { 0x920A, 0x0362, 0xDFFF, (uint16_t)atmega48p },
-    { 0x930A, 0x0362, 0xDFFF, (uint16_t)atmega88 },
+    { 0x930A, 0x0362, 0xDFF9, (uint16_t)atmega88 },
     { 0x930F, 0x0362, 0xDFF9, (uint16_t)atmega88p },
     { 0x9406, 0x0362, 0xDFF9, (uint16_t)atmega168 },
-    { 0x940B, 0x0362, 0xDFFF, (uint16_t)atmega168p },
+    { 0x940B, 0x0362, 0xDFF9, (uint16_t)atmega168p },
     { 0x9514, 0x0362, 0xD9FF, (uint16_t)atmega328 },
-    { 0x940F, 0x0342, 0x99FF, (uint16_t)atmega164a },
-    { 0x940A, 0x0342, 0x99FF, (uint16_t)atmega164p },
-    { 0x9515, 0x0342, 0x99FF, (uint16_t)atmega324a },
-    { 0x9508, 0x0342, 0x99FF, (uint16_t)atmega324p },
-    { 0x9511, 0x0342, 0x99FF, (uint16_t)atmega324pa },
+    { 0x940F, 0x0362, 0x99FF, (uint16_t)atmega164a },
+    { 0x940A, 0x0362, 0x99FF, (uint16_t)atmega164p },
+    { 0x9515, 0x0362, 0x99FF, (uint16_t)atmega324a },
+    { 0x9508, 0x0362, 0x99FF, (uint16_t)atmega324p },
+    { 0x9511, 0x0362, 0x99FF, (uint16_t)atmega324pa },
     { 0x9609, 0x0362, 0x99FF, (uint16_t)atmega644 },
     { 0x960A, 0x0362, 0x99FF, (uint16_t)atmega644p },
-    { 0x9602, 0x0000, 0x0000, (uint16_t)atmega644rfr2 },
-    { 0x9706, 0x0342, 0x99FF, (uint16_t)atmega1284 },
-    { 0x9705, 0x0342, 0x99FF, (uint16_t)atmega1284p },
-    { 0x9703, 0x0000, 0x0000, (uint16_t)atmega1284rfr2 },
+    { 0x9602, 0x0362, 0x99FE, (uint16_t)atmega644rfr2 },
+    { 0x9706, 0x0362, 0x99FF, (uint16_t)atmega1284 },
+    { 0x9705, 0x0362, 0x99FF, (uint16_t)atmega1284p },
+    { 0x9703, 0x0362, 0x99FE, (uint16_t)atmega1284rfr2 },
     { 0x950F, 0x0362, 0xD9FF, (uint16_t)atmega328p },
   };
 
@@ -332,6 +339,16 @@ int mcu_index = -1; // index into mcu_types array - see above
 unsigned long mcu_signature = 0; // signature as read from chip
 boolean ec_allowed = true; // whether chip erase is allowed - only relevant for FBD
 
+// This does not do anything under Arduino, since the bootloader will take care 
+// but when running standalone it guards against reset loops caused by
+// watchdog resets
+void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3"))) __attribute__((used));
+void wdt_init(void)
+{
+  MCUSR = 0;
+  wdt_disable();
+  return;
+} 
 
 void setup() { // run once, when the sketch starts
   char modec = ' ';
@@ -390,11 +407,6 @@ void setup() { // run once, when the sketch starts
   }
   if (mcu_mode > HVSP) {
     Serial.println(F("No chip found!"));
-#ifndef FBD_MODE
-    Serial.println(F("Check wiring and try again."));
-    Serial.println();
-    while (true) ;
-#endif
     Serial.println(F("Insert chip and reset or give details."));
     if (!interactive_mode) {
       showLed(true,false,3000); // 3 secs of red
@@ -407,13 +419,13 @@ void setup() { // run once, when the sketch starts
       Serial.println(F("  P - HVPP"));
       Serial.println(F("  T - HVPP for Tiny"));
       Serial.println(F("  S - HVSP"));
-      Serial.println(F("  X - exit"));
+      Serial.println(F("  R - Restart"));
       Serial.print(F("Choice: "));
       while (!Serial.available())  { };
       modec = toupper(Serial.read());
       Serial.println(modec);
       while (Serial.available()) Serial.read();
-      if (modec == 'P' || modec == 'T' || modec == 'S' || modec == 'X') break;
+      if (modec == 'P' || modec == 'T' || modec == 'S' || modec == 'R') break;
       Serial.print("'");
       Serial.print(modec);
       Serial.println(F("' is not valid choice."));
@@ -422,7 +434,7 @@ void setup() { // run once, when the sketch starts
     case 'P': mcu_mode = ATMEGA; break;
     case 'T': mcu_mode = TINY2313; break;
     case 'S': mcu_mode = HVSP; break;
-    default: while (true) { };
+    case 'R': wdt_enable(WDTO_15MS); delay(100); break;
     }
   }
   Serial.print(F("Signature: "));
@@ -435,7 +447,7 @@ void setup() { // run once, when the sketch starts
       printMCUName(mcu_index);
       Serial.print(F(" / "));
       if (!interactive_mode) {
-        showLed(false,true,1000);
+        showLed(false,true,1000); // 1 second green
       } 
       mcu_index = -1;
     }
@@ -498,13 +510,14 @@ void loop() {  // run over and over again
       while (Serial.available()) Serial.read();
       Serial.println();
       Serial.println(F("Choose:"));
-      if (mcu_index >= 0) Serial.println(F("  R - Try to resurrect chip by all means"));
+      if (mcu_index >= 0) Serial.println(F("  T - Try to resurrect chip by all means"));
       Serial.println(F("  E - Erase chip"));
       if (mcu_index >= 0) Serial.println(F("  D - Burn default fuse values"));
       Serial.println(F("  L - Change low fuse"));
       if (mcu_fuses > 1) Serial.println(F("  H - Change high fuse"));
       if (mcu_fuses > 2) Serial.println(F("  X - Change extended fuse"));
       Serial.println(F("  K - Change lock byte"));
+      Serial.println(F("  R - Restart"));
       Serial.print(F("Action: "));
       
       while (!Serial.available()) { };
@@ -512,7 +525,7 @@ void loop() {  // run over and over again
       Serial.println(action);
       
       if (action == 'E' || action == 'D' || action == 'L' ||
-          action == 'H' || action == 'X' || action == 'K' || action == 'R') break;
+          action == 'H' || action == 'X' || action == 'K' || action == 'T' || action == 'R') break;
       if (action >= ' ') {
         Serial.print("'");
         Serial.print(action);
@@ -522,7 +535,8 @@ void loop() {  // run over and over again
   
     enterHVProgMode(mcu_mode);
     switch (action) {
-    case 'R':
+    case 'R': wdt_enable(WDTO_15MS); delay(100); break;
+    case 'T':
       if (mcu_index >= 0) resurrection(dlfuse, dhfuse, defuse);
       break;
     case 'E': 
@@ -1016,7 +1030,7 @@ byte readHVPPOSCCAL(int mode) {
   setDataDirection(INPUT);
   sendHVPPCmdOrAddr(mode,true,B00001000);
   sendHVPPCmdOrAddr(mode,false,0);
-  digitalWrite(BS1,LOW);
+  digitalWrite(BS1,HIGH);
   digitalWrite(OE, LOW);
   delay(1);
   result = getData();
