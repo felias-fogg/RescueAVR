@@ -4,7 +4,7 @@
 This sketch can be used to resurrect AVR chips with wrong fuse
 settings using **high-voltage programming**. You need an Arduino, a breadboard, 2 transistors, a few
 resistors and an external regulated 12 volt supply. In addition, the sketch is also an alternative firmware for
-[manekinen's Fusebit Doctor](https://web.archive.org/web/20180225102717/http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en)
+[manekinen's Fusebit Doctor](https://web.archive.org/web/20180225102717/http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en).
 
 
 When you use the sketch, remember to set the baud rate to 19200 baud (no parity, 1 stop-bit).
