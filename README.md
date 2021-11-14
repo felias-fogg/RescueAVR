@@ -20,7 +20,7 @@ The most important part for high-voltage programming is the ability to put 12 vo
 For small ATtinys, the wiring is straight forward because they use serial programming, where you need only few cables. A Fritzing diagram for an ATtinyX5 looks as follows.
 ![ATtinyX5 Fritzing sketch](RescueAVR-tinyX5_breadboard.png)
 
-Similarly, the wiring for an ATtinyX4 is quite simple as well. As you can see, one needs just 2 data lines (SDI, SDO), one clock line (SCI), one control libe (SII), and in addition one has to switch the RESET line and the Vcc line. 
+Similarly, the wiring for an ATtinyX4 is quite simple as well. As you can see, one needs just 2 data lines (SDI, SDO), one clock line (SCI), one control line (SII), and in addition one has to switch the RESET line and the Vcc line. 
 ![ATtinyX4 Fritzing sketch](RescueAVR-tinyX4_breadboard.png)
 
 For an ATmegaX8 MCU, the wiring is much more involved. Instead of 2 data lines, one clock line as well as three control lines (SII, RESET and Vcc), one has to deal with 8 data lines, one clock line, and 9 control lines! This may look like as in the following Fritzing diagram.
@@ -41,7 +41,7 @@ recognize the chip:
 - green LED on for one second, then red LED on for three seconds: chip has been rcognized, but there is not enough information in the firmware to resurrect it,
 - red LED is on for three seconds: no chip recognized.
 
-After having recognized the MCU, the board tries to reset all lock bits and then tries to set the fuses to a safe default setting. If successful, the green LED flashes for 5 seconds, otherwise the red LED flashes for 5 seonds. If unsuccessful, you can try to set the erase jumper, which allows for erasing the entire chip in order to recover it.
+After having recognized the MCU, the board tries to reset all lock bits and then tries to set the fuses to a safe default setting. If successful, the green LED flashes for 5 seconds, otherwise the red LED flashes for 5 seconds. If unsuccessful, you can try to set the erase jumper, which allows for erasing the entire chip in order to recover it.
 
 If the serial line on the board is connected to a computer using 19200 baud (no parity, 1 stop-bit) then you can use the ***interactive rescue mode***.
 
@@ -83,7 +83,5 @@ You can then choose from the following menu.
   		R - Restart
 	Action: 
 	
-If you are only interested to unbrick your chip, press 'T'. This tries to unlock the chip. If this is not possible, it will try to erase the chip (if the 'chip erase' jumper on the Fuse-Doctor board is set). After it, it will try to reset the fuses to their default value. 
-
-If 'T' does not help, you may have not set the 'chip erase' jumper on the Fuse-Doctor board. On the Arduino there is nothing like that, though. If even setting the jumper does not help, you can probably say 'good bye' to the chip. 
+If you are only interested unbricking your chip, press 'T'. This tries to unlock the chip. If this is not possible, it will try to erase the chip (if the 'chip erase' jumper on the Fuse-Doctor board is set). After it, it will try to reset the fuses to their default value. If 'T' does not help, you can probably say 'good bye' to the chip. 
 
