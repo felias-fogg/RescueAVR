@@ -14,12 +14,12 @@ When you use the sketch, remember to set the baud rate to 19200 baud (no parity,
 
 ### Using RescueAVR on an Arduino
 
-I have tried out the sketch with an ATtiny84, an ATtiny85, and an ATmega328 on the Arduino Uno. I have included Fritzing wiring scheme for these three chips (see below). For other chips, you have to consult the data sheet of the particular micro-controller. You find the pin mapping usually in the sectikon on ***Memory Programming***.
+I have tried out the sketch with an ATtiny84, an ATtiny85, and an ATmega328 on the Arduino Uno. I have included Fritzing wiring scheme for these three chips (see below). For other chips, you have to consult the data sheet of the particular micro-controller. You find the pin mapping usually in the section on ***Memory Programming***.
 
-The most important part for high-voltage programming is the ability to put 12 volt to the RESET pin of the MCU. So, you need a regulated 12 volt supply and a switch that applies this voltage to the RESET pin. Such a switch using two transistors is shown below. The transistors I have used are fairly standard ones. You can probably use any other reasonable type. But make sure that the pins are ordered as in the picture, i.e., CBE (otherwise the pins in the Fritzing diagram are not correct).
+The most important part for high-voltage programming is the ability to put 12 volt to the RESET pin of the MCU. So, you need a regulated 12 volt supply and an electronic switch that applies this voltage to the RESET pin. Such a switch using two transistors is shown below. The transistors I have used are fairly standard ones. You can probably use any other reasonable type. But make sure that the pins are ordered as in the picture, i.e., CBE (otherwise the pins in the Fritzing diagram are not correct).
 
 ![12V switch](switch.png)
-For small ATtinys, the wiring is straight forward because they use serial programming, where you need only few wires necessary. A Fritzing diagram for an ATtinyX5 looks as follows.
+For small ATtinys, the wiring is straight forward because they use serial programming, where you need only few wires. The Fritzing diagram for an ATtinyX5 looks as follows.
 ![ATtinyX5 Fritzing sketch](RescueAVR-tinyX5_breadboard.png)
 
 Similarly, the wiring for an ATtinyX4 is quite simple as well. As you can see, one needs just 2 data lines (SDI, SDO), one clock line (SCI), one control line (SII), and in addition one has to switch the RESET line and the Vcc line. 
