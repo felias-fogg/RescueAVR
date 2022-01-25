@@ -2,24 +2,19 @@
 
 //  Title:        RescueAVR
 
-#define VERSION  "2.3"
+#define VERSION  "2.3.1"
 
-/*
-  based on Jeff Keyzer's HVRescue_Shield and manekinen's Fusebit Doctor.
+/*Copyright 2013-2021 by Bernhard Nebel and parts are copyrighted by Jeff Keyzer.
+  License: GPLv3
 
-  It uses the hardware designed by manekinen but the software is completely
+  It uses the hardware designed by manekinen, but the software is completely
   new, using ideas und snippets from  Jeff Keyzer's sketch HVRescue_Shield.
-  In addition, the program can also be run on a native Arduino, provided
-  12V are supplied and the target chip is connected to the right Arduino
-  pins.
+  In addition, the program can also be run on an Arduino Uno or Nano.
 
-  The program decides on its own whether it runs in Arduino or
-  Fusebit-Doctor mode. This decision is based on the CPU frequency.
-  With F_CPU <= 8000000, it is assumed that the software runs on the Fusebit-Doctor
-  board. Otherwise it must be an Arduino board. This can be overriden with a define
-  below.
-  
-  Copyright 2013 by Bernhard Nebel and parts are copyrighted by Jeff Keyzer.
+  The program can beither compiled for Arduino Uno or Nano usage (when
+  ARDUINO_AVR_UNO ARDUINO_AVR_NANO is defined), or for Fusebit Doctor
+  boards (in all other cases). If you want to compile it for the
+  Fusebit Doctor board, I recommend to use the MiniCore.  
  
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -37,18 +32,26 @@ Version 2.3 (21.1.2021)
   - added support for ATtiny1634
   - corrected the code for reading the OSCCAL value
   - added 'R - Restart' to all menus (and changed resurrect to 'T')
+
+Version 2.3.1 (25.1.2022)
+  - added some explanantion
+  - made compile mode dependend on target board specification 
+  - fixed a few warnings
+  - added Github actions
 */
 
 /* Uncomment one of the following two lines, if you do not want to
-   leave the decision on which board we are executed to the 
-   the CPU frequency, i.e. F_CPU <= 8000000 -> FBD_MODE, otherwise ARDUNIO_MODE
+   leave the decision on which board we are executed to the
+   specification of the target board
 */
 // #define FBD_MODE
 // #define ARDUINO_MODE
 
 #if !defined(FBD_MODE) && !defined(ARDUINO_MODE)
-#if F_CPU <= 8000000L 
+#if !defined(ARDUINO_AVR_UNO) && !defined(ARDUINO_AVR_NANO) 
    #define FBD_MODE
+#else
+   #define ARDUINO_MODE
 #endif
 #endif
 
@@ -201,6 +204,7 @@ const uint16_t mcu_types[MCU_NUM][4] PROGMEM =
 #ifdef FBD_MODE
 /* pin assignment for the FBD board */
 /************************************/
+// data lines are the PORTB lines
 #define  VCC      5 
 #define  RDY     14 
 #define  OE       2 
@@ -224,6 +228,7 @@ const uint16_t mcu_types[MCU_NUM][4] PROGMEM =
 #else
 /* pin assignment for Arduino board */
 /************************************/
+// data lines are pins 2 to 9
 #define  VCC       12
 #define  RST       13
 
@@ -479,8 +484,8 @@ void setup() { // run once, when the sketch starts
 
 void loop() {  // run over and over again
   
-  byte hfuse, lfuse, efuse, lock, osccal;  // fuse and lock values
-  byte dhfuse, dlfuse, defuse;  // default values
+  byte hfuse = 0, lfuse = 0, efuse = 0, lock = 0, osccal = 0;  // fuse and lock values
+  byte dhfuse = 0, dlfuse = 0, defuse = 0;  // default values
   char action = ' ';
   
   if (mcu_index >= 0) {
@@ -601,7 +606,7 @@ void loop() {  // run over and over again
 }
 
 void resurrection(byte dlf, byte dhf, byte def) {
-  byte lf, hf, ef, lk;
+  byte lf = 0, hf = 0, ef = 0, lk = 0;
   
   Serial.println(F("Start HV programming mode..."));
   enterHVProgMode(mcu_mode);
@@ -661,7 +666,7 @@ void resurrection(byte dlf, byte dhf, byte def) {
 }
 
 
-void setAndVerifyOneByte(int SEL, char* mess) {
+void setAndVerifyOneByte(int SEL, const char* mess) {
   int toburn;
 
   while (Serial.available()) Serial.read();
@@ -678,7 +683,7 @@ void setAndVerifyOneByte(int SEL, char* mess) {
   }
 }
 
-void verifyOneByte(int SEL, byte desired, char* mess) {
+void verifyOneByte(int SEL, byte desired, const char* mess) {
   byte newval;
 
   showLed(true,true,600);
@@ -972,7 +977,7 @@ byte readHVPPFuse(int mode, int select) {
 }
 
 byte readHVSPFuse(int select) {
-  byte fuse;
+  byte fuse = 0;
   
   switch (select) {
 
@@ -1273,7 +1278,7 @@ int hex2dec(byte c) { // converts one HEX character into a number
   else return 0;
 }
 
-void printFuses(char *str, byte num, byte l, byte h, byte e) {
+void printFuses(const char *str, byte num, byte l, byte h, byte e) {
   Serial.print(str);
   switch (num) {
   case 1: Serial.print(F("Fuse byte:   ")); break;
@@ -1307,6 +1312,7 @@ void print2Hex(byte val, boolean blank)
 
 void showLed(boolean red, boolean green, unsigned int time) 
 {
+  (void)red; (void)green; (void)time;
 #ifdef FBD_MODE
   if (red) digitalWrite(XA0,HIGH);
   if (green) digitalWrite(ORIGXA1,HIGH);
@@ -1319,7 +1325,7 @@ void showLed(boolean red, boolean green, unsigned int time)
 }
 
 void ledBlink(byte color,byte sec) {
-  
+  (void)sec; (void)color;
 #ifdef FBD_MODE
   for (int i=0; i < 10*sec; i++) {
     if (color == RED) digitalWrite(XA0,HIGH);
