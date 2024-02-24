@@ -33,9 +33,9 @@ When this is put to work in reality, it can look as follows. Check the wiring tw
 
 After you made all the connections (and double checked them!), open the Arduino monitor window, switch to 19200 baud, switch the external power supply on, and press reset on the Arduino. You are now in ***interactive rescue mode*** and can do a lot of things (see below).
 
-### Using RescueAVR on the Fuse-Doctor
+### Using RescueAVR on the Fusebit Doctor
 
-The Fuse-Doctor can be run stand-alone or connected to a computer. In the stand-alone mode, after power-up, all LEDs are off and you can insert a chip. After pressing the button, the board will first try to
+The Fusebit Doctor can be run stand-alone or connected to a computer. In the stand-alone mode, after power-up, all LEDs are off and you can insert a chip. After pressing the button, the board will first try to
 recognize the chip:
 
 - green LED on for three seconds: chip has been successfully recognized,
@@ -44,7 +44,7 @@ recognize the chip:
 
 After having recognized the MCU, the board tries to reset all lock bits and then tries to set the fuses to a safe default setting. If successful, the green LED flashes for 5 seconds, otherwise the red LED flashes for 5 seconds. If unsuccessful, you can try to set the erase jumper, which allows for erasing the entire chip in order to recover it.
 
-If the serial line on the board is connected to a computer using 19200 baud (no parity, 1 stop-bit) then you can use the ***interactive rescue mode***.
+If the serial line on the board is connected to a computer using 19200 baud (no parity, 1 stop-bit) then you can use the ***interactive rescue mode***, which gives you more control than the stand-alone mode.
 
 ### Interactive Rescue Mode
 
