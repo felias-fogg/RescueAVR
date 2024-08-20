@@ -2,7 +2,7 @@
 
 //  Title:        RescueAVR
 
-#define VERSION  "2.3.1"
+#define VERSION  "2.4.0"
 
 /*Copyright 2013-2021 by Bernhard Nebel and parts are copyrighted by Jeff Keyzer.
   License: GPLv3
@@ -38,21 +38,28 @@ Version 2.3.1 (25.1.2022)
   - made compile mode dependend on target board specification 
   - fixed a few warnings
   - added Github actions
+
+Version 2.4.0 (20.8.2024)
+  - added a few MCUs: ATtiny22, ATtiny43U, ATtiny87, ATtiny167, ATmega48PB, ATmega88PB, ATmega168PB, ATmega328PB,
+    ATmega640, ATmega1280, ATmega1281, ATmega2560, ATmega2561, ATmega8U2, ATmega16U2, ATmega32U2, ATmega16U4, ATmega32U4,
+    AT90S2333, ATtiny441, ATtiny841, ATtiny828
+  - renamed ATMEGA -> HVPP and TINY2313 -> TINYHVPP
+  - added ARDUINO_AVR_PRO to the list of boards that can execute the Arduino version of the RescueAVR sketch 
 */
 
 /* Uncomment one of the following two lines, if you do not want to
-   leave the decision on which board we are executed to the
+   leave the decision on which board the sketch is executed to the
    specification of the target board
 */
 // #define FBD_MODE
 // #define ARDUINO_MODE
 
 #if !defined(FBD_MODE) && !defined(ARDUINO_MODE)
-#if !defined(ARDUINO_AVR_UNO) && !defined(ARDUINO_AVR_NANO) 
-   #define FBD_MODE
-#else
-   #define ARDUINO_MODE
-#endif
+  #if !defined(ARDUINO_AVR_UNO) && !defined(ARDUINO_AVR_NANO) && !defined(ARDUINO_AVR_PRO)
+    #define FBD_MODE
+  #else
+    #define ARDUINO_MODE
+  #endif
 #endif
 
 #include <avr/pgmspace.h>
@@ -65,6 +72,7 @@ Version 2.3.1 (25.1.2022)
 // The names of all MCUs known to us
 const char at90s2313[] PROGMEM = "AT90S2313";
 const char at90s2333[] PROGMEM = "AT90S2333";
+const char at90s2323[] PROGMEM = "AT90S2323";
 const char at90s2343[] PROGMEM = "AT90S2343";
 const char at90s4433[] PROGMEM = "AT90S4433";
 const char at90s4434[] PROGMEM = "AT90S4434";
@@ -74,11 +82,15 @@ const char attiny11[] PROGMEM = "ATtiny11";
 const char attiny12[] PROGMEM = "ATtiny12";
 const char attiny13[] PROGMEM = "ATtiny13";
 const char attiny15[] PROGMEM = "ATtiny15";
+const char attiny22[] PROGMEM = "ATtiny22";
+const char attiny43u[] PROGMEM = "ATtiny43U";
 const char attiny2313[] PROGMEM = "ATtiny2313";
 const char attiny4313[] PROGMEM = "ATtiny4313";
 const char attiny24[] PROGMEM = "ATtiny24";
 const char attiny44[] PROGMEM = "ATtiny44";
 const char attiny84[] PROGMEM = "ATtiny84";
+const char attiny441[] PROGMEM = "ATtiny441";
+const char attiny841[] PROGMEM = "ATtiny841";
 const char attiny25[] PROGMEM = "ATtiny25";
 const char attiny45[] PROGMEM = "ATtiny45";
 const char attiny85[] PROGMEM = "ATtiny85";
@@ -86,10 +98,13 @@ const char attiny26[] PROGMEM = "ATtiny26";
 const char attiny261[] PROGMEM = "ATtiny261";
 const char attiny461[] PROGMEM = "ATtiny461";
 const char attiny861[] PROGMEM = "ATtiny861";
+const char attiny87[] PROGMEM = "ATtiny87";
+const char attiny167[] PROGMEM = "ATtiny167";
 const char attiny1634[] PROGMEM = "ATtiny1634";
 const char attiny28[] PROGMEM = "ATtiny28";
 const char attiny48[] PROGMEM = "ATtiny48";
 const char attiny88[] PROGMEM = "ATtiny88";
+const char attiny828[] PROGMEM = "ATtiny828";
 const char atmega8515[] PROGMEM = "ATmega8515";
 const char atmega8535[] PROGMEM = "ATmega8535";
 const char atmega8[] PROGMEM = "ATmega8";
@@ -109,11 +124,21 @@ const char atmega128rfa1[] PROGMEM = "ATmega128RFA1";
 const char atmega162[] PROGMEM = "ATmega162";
 const char atmega48[] PROGMEM = "ATmega48";
 const char atmega48p[] PROGMEM = "ATmega48P";
+const char atmega48pb[] PROGMEM = "ATmega48PB";
 const char atmega88[] PROGMEM = "ATmega88";
 const char atmega88p[] PROGMEM = "ATmega88P";
+const char atmega88pb[] PROGMEM = "ATmega88PB";
 const char atmega168[] PROGMEM = "ATmega168";
 const char atmega168p[] PROGMEM = "ATmega168P";
+const char atmega168pb[] PROGMEM = "ATmega168PB";
 const char atmega328[] PROGMEM = "ATmega328";
+const char atmega328p[] PROGMEM = "ATmega328P";
+const char atmega328pb[] PROGMEM = "ATmega328PB";
+const char atmega640[] PROGMEM = "ATmega640";
+const char atmega1280[] PROGMEM = "ATmega1280";
+const char atmega1281[] PROGMEM = "ATmega1281";
+const char atmega2560[] PROGMEM = "ATmega2560";
+const char atmega2561[] PROGMEM = "ATmega2561";
 const char atmega164a[] PROGMEM = "ATmega164A";
 const char atmega164p[] PROGMEM = "ATmega164P";
 const char atmega324a[] PROGMEM = "ATmega324A";
@@ -125,18 +150,24 @@ const char atmega644rfr2[] PROGMEM = "ATmega644RFR2";
 const char atmega1284[] PROGMEM = "ATmega1284";
 const char atmega1284p[] PROGMEM = "ATmega1284P";
 const char atmega1284rfr2[] PROGMEM = "ATmega1284RFR2";
-const char atmega328p[] PROGMEM = "ATmega328P";
+const char atmega8u2[] PROGMEM = "ATmega8U2";
+const char atmega16u2[] PROGMEM = "ATmega16U2";
+const char atmega32u2[] PROGMEM = "ATmega32U2";
+const char atmega8u4[] PROGMEM = "ATmega8U4";
+const char atmega16u4[] PROGMEM = "ATmega16U4";
+const char atmega32u4[] PROGMEM = "ATmega32U4";
 
 // table with signatures
-// 1st word signature (w/o 1E), 2nd word: MSB number of fuses (or 0 if we do not know),
+// 1st word signature (w/o 1E), 2nd word: MSB number of fuses,
 // 2nd word LSB: low fuse, 3rd word MSB: high fuse, 3rd word LSB: extended fuse,
 // 4th word string address. 
 
-#define MCU_NUM 63
+#define MCU_NUM 85
 const uint16_t mcu_types[MCU_NUM][4] PROGMEM =
   { 
     { 0x9101, 0x01FF, 0x0000, (uint16_t)at90s2313 },
     { 0x9105, 0x01FF, 0x0000, (uint16_t)at90s2333 },
+    { 0x9102, 0x01FF, 0x0000, (uint16_t)at90s2323 },
     { 0x9103, 0x01FF, 0x0000, (uint16_t)at90s2343 },
     { 0x9203, 0x01FF, 0x0000, (uint16_t)at90s4433 },
     { 0x9202, 0x01FF, 0x0000, (uint16_t)at90s4434 },
@@ -146,11 +177,15 @@ const uint16_t mcu_types[MCU_NUM][4] PROGMEM =
     { 0x9005, 0x0152, 0x0000, (uint16_t)attiny12 },
     { 0x9007, 0x026A, 0xFF00, (uint16_t)attiny13 },
     { 0x9006, 0x015C, 0x0000, (uint16_t)attiny15 },
+    { 0x9106, 0x01FF, 0x0000, (uint16_t)attiny22 },
+    { 0x920C, 0x0362, 0xDFFF, (uint16_t)attiny43u },
     { 0x910A, 0x0362, 0xDFFF, (uint16_t)attiny2313 },
     { 0x920D, 0x0362, 0xDFFF, (uint16_t)attiny4313 },
     { 0x910B, 0x0362, 0xDFFF, (uint16_t)attiny24 },
     { 0x9207, 0x0362, 0xDFFF, (uint16_t)attiny44 },
     { 0x930C, 0x0362, 0xDFFF, (uint16_t)attiny84 },
+    { 0x9215, 0x0362, 0xDFFF, (uint16_t)attiny441 },
+    { 0x9315, 0x0362, 0xDFFF, (uint16_t)attiny841 },
     { 0x9108, 0x0362, 0xDFFF, (uint16_t)attiny25 },
     { 0x9206, 0x0362, 0xDFFF, (uint16_t)attiny45 },
     { 0x930B, 0x0362, 0xDFFF, (uint16_t)attiny85 },
@@ -158,10 +193,13 @@ const uint16_t mcu_types[MCU_NUM][4] PROGMEM =
     { 0x910C, 0x0362, 0xDFFF, (uint16_t)attiny261 },
     { 0x9208, 0x0362, 0xDFFF, (uint16_t)attiny461 },
     { 0x930D, 0x0362, 0xDFFF, (uint16_t)attiny861 },
+    { 0x9387, 0x0362, 0xDFFF, (uint16_t)attiny87 },
+    { 0x9487, 0x0362, 0xDFFF, (uint16_t)attiny167 },
     { 0x9412, 0x0362, 0xDFFF, (uint16_t)attiny1634 },
     { 0x9107, 0x01FF, 0x0000, (uint16_t)attiny28 },
     { 0x9209, 0x0362, 0xDFFF, (uint16_t)attiny48 },
     { 0x9311, 0x0362, 0xDFFF, (uint16_t)attiny88 },
+    { 0x9314, 0x036E, 0xDFFF, (uint16_t)attiny828 },
     { 0x9306, 0x02E1, 0xD900, (uint16_t)atmega8515 },
     { 0x9308, 0x02E1, 0xD900, (uint16_t)atmega8535 },
     { 0x9307, 0x02E1, 0xD900, (uint16_t)atmega8 },
@@ -181,11 +219,21 @@ const uint16_t mcu_types[MCU_NUM][4] PROGMEM =
     { 0x9404, 0x0362, 0x99FF, (uint16_t)atmega162 },
     { 0x9205, 0x0362, 0xDFFF, (uint16_t)atmega48 },
     { 0x920A, 0x0362, 0xDFFF, (uint16_t)atmega48p },
+    { 0x9210, 0x0362, 0xD9F7, (uint16_t)atmega48pb },
     { 0x930A, 0x0362, 0xDFF9, (uint16_t)atmega88 },
     { 0x930F, 0x0362, 0xDFF9, (uint16_t)atmega88p },
+    { 0x9316, 0x0362, 0xD9F7, (uint16_t)atmega88pb },
     { 0x9406, 0x0362, 0xDFF9, (uint16_t)atmega168 },
     { 0x940B, 0x0362, 0xDFF9, (uint16_t)atmega168p },
+    { 0x9415, 0x0362, 0xD9F7, (uint16_t)atmega168pb },
     { 0x9514, 0x0362, 0xD9FF, (uint16_t)atmega328 },
+    { 0x950F, 0x0362, 0xD9FF, (uint16_t)atmega328p },
+    { 0x9516, 0x0362, 0xD9F7, (uint16_t)atmega328pb },
+    { 0x9608, 0x0342, 0x99FF, (uint16_t)atmega640 },
+    { 0x9703, 0x0342, 0x99FF, (uint16_t)atmega1280 },
+    { 0x9704, 0x0342, 0x99FF, (uint16_t)atmega1281 },
+    { 0x9801, 0x0342, 0x99FF, (uint16_t)atmega2560 },
+    { 0x9802, 0x0342, 0x99FF, (uint16_t)atmega2561 },
     { 0x940F, 0x0362, 0x99FF, (uint16_t)atmega164a },
     { 0x940A, 0x0362, 0x99FF, (uint16_t)atmega164p },
     { 0x9515, 0x0362, 0x99FF, (uint16_t)atmega324a },
@@ -197,7 +245,11 @@ const uint16_t mcu_types[MCU_NUM][4] PROGMEM =
     { 0x9706, 0x0362, 0x99FF, (uint16_t)atmega1284 },
     { 0x9705, 0x0362, 0x99FF, (uint16_t)atmega1284p },
     { 0x9703, 0x0362, 0x99FE, (uint16_t)atmega1284rfr2 },
-    { 0x950F, 0x0362, 0xD9FF, (uint16_t)atmega328p },
+    { 0x9389, 0x035E, 0xD9F4, (uint16_t)atmega8u2 },
+    { 0x9489, 0x035E, 0xD9F4, (uint16_t)atmega16u2 },
+    { 0x958A, 0x035E, 0xD9F4, (uint16_t)atmega32u2 },
+    { 0x9488, 0x035E, 0x99F3, (uint16_t)atmega16u4 },
+    { 0x9587, 0x035E, 0x99F3, (uint16_t)atmega32u4 },
   };
 
 
@@ -332,7 +384,7 @@ byte XA1 = ORIGXA1; // ATtiny2313: XA1 = BS2
 
 
 // Internal definitions
-enum { ATMEGA, TINY2313, HVSP };
+enum { HVPP, TINYHVPP, HVSP };
 enum { LFUSE_SEL, HFUSE_SEL, EFUSE_SEL, LOCK_SEL };
 enum { RED, GREEN };
 
@@ -402,7 +454,7 @@ void setup() { // run once, when the sketch starts
 #endif
   Serial.println();
 
-  for (mcu_mode = ATMEGA; mcu_mode <= HVSP; mcu_mode++) {
+  for (mcu_mode = HVPP; mcu_mode <= HVSP; mcu_mode++) {
     enterHVProgMode(mcu_mode);
     mcu_signature = readSig(mcu_mode);
     leaveHVProgMode();
@@ -436,8 +488,8 @@ void setup() { // run once, when the sketch starts
       Serial.println(F("' is not valid choice."));
     }
     switch (modec) {
-    case 'P': mcu_mode = ATMEGA; break;
-    case 'T': mcu_mode = TINY2313; break;
+    case 'P': mcu_mode = HVPP; break;
+    case 'T': mcu_mode = TINYHVPP; break;
     case 'S': mcu_mode = HVSP; break;
     case 'R': wdt_enable(WDTO_15MS); delay(100); break;
     }
@@ -757,7 +809,7 @@ void eraseChip(int mode) {
 void enterHVProgMode(int mode) {
   
   // Initialize pins to enter programming mode
-  if (mode == TINY2313) {
+  if (mode == TINYHVPP) {
     PAGEL = BS1;
     XA1 = BS2;
   } else {
@@ -855,7 +907,7 @@ void burnHVPPFuse(int mode, byte fuse, int select)  // write high or low fuse to
   digitalWrite(XA0, HIGH);
   // Specify low byte
   digitalWrite(BS1, LOW); 
-  if (mode != TINY2313)
+  if (mode != TINYHVPP)
     digitalWrite(BS2, LOW);  
   delay(1);
   
@@ -1158,7 +1210,7 @@ void sendHVPPCmdOrAddr(int mode, boolean is_cmd, byte cmd_or_addr)  // Send comm
   digitalWrite(XA0, LOW);
   digitalWrite(BS1, LOW);  
   
-  if (mode != TINY2313)
+  if (mode != TINYHVPP)
     digitalWrite(BS2, LOW);  // Command load seems not to work if BS2 is high 
   
   setData(cmd_or_addr);
