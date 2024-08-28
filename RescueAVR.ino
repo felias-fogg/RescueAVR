@@ -2,7 +2,7 @@
 
 //  Title:        RescueAVR
 
-#define VERSION  "2.5.0"
+#define VERSION  "2.6.0"
 
 /*Copyright 2013-2021 by Bernhard Nebel and parts are copyrighted by Jeff Keyzer.
   License: GPLv3
@@ -40,25 +40,30 @@ Version 2.3.1 (25.1.2022)
   - added Github actions
 
 Version 2.4.0 (20.8.2024)
-  - added a few MCUs: ATtiny22, ATtiny43U, ATtiny87, ATtiny167, ATmega48PB, ATmega88PB, ATmega168PB, ATmega328PB,
-    ATmega640, ATmega1280, ATmega1281, ATmega2560, ATmega2561, ATmega8U2, ATmega16U2, ATmega32U2, ATmega16U4, ATmega32U4,
+  - added a few MCUs: ATtiny22, ATtiny43U, ATtiny87, ATtiny167, ATmega48PB, 
+    ATmega88PB, ATmega168PB, ATmega328PB,
+    ATmega640, ATmega1280, ATmega1281, ATmega2560, ATmega2561, ATmega8U2, ATmega16U2, 
+    ATmega32U2, ATmega16U4, ATmega32U4,
     AT90S2333, ATtiny441, ATtiny841, ATtiny828
   - renamed ATMEGA -> HVPP and TINY2313 -> TINYHVPP
   - added ARDUINO_AVR_PRO to the list of boards that can execute the Arduino version of the RescueAVR sketch 
 
-Version 2.5.0
+Version 2.5.0 (28.8.2024)
   - fixed: handling of MCUs that read lock and fuse bits into one byte 
     (some of the very obsolete MCUs). These have now a marker in the number of
-    of fuse bytes field at bit 7.
+    of fuse bytes field at bit 7 in the MCU table.
   - fixed: use direct printing of MCU name in printMCUName instead of going via
     a buffer (which was too small and led to a buffer overrun)
-  - fixed: for ATTiny11, ATtiny12, ATTiny22, compare only the LB1 and LB2 bits of the 
+  - fixed: for ATTiny11, ATtiny12, compare only the LB1 and LB2 bits of the 
     lock byte when verifying after resurrection!
   - fixed: give error message when selecting 'H' or 'X' and there are not enough fuse bytes
   - added: all missing currently supported MCUs after running extract.py on the ATDF files
   - added: a few more obsolete MCUs, e.g., AT90S1200, ATmega161, ...
   - added: restart option when asking for number of fuse bytes
   - removed: attempting to clear lock bits because this always fails! 
+
+Version 2.6.0 
+  - fixed: handling of MCUs that read fuse and lock bits in one byte (AT90S2323 etc.)
 */
 
 /* Uncomment one of the following two lines, if you do not want to
@@ -506,7 +511,7 @@ enum { RED, GREEN };
 // Global variables
 byte mcu_mode;  // programming mode
 byte mcu_fuses = 0; // number of fuses for the actual chip
-boolean mcu_read_fuse_and_lock_bits_together = false;
+boolean fuse_and_lock = false; // true when lock and fuse bits are together
 boolean interactive_mode = true; // interaction over terminal
 int mcu_index = -1; // index into mcu_types array - see above
 unsigned long mcu_signature = 0; // signature as read from chip
@@ -655,7 +660,7 @@ void setup() { // run once, when the sketch starts
     Serial.println();
     printHVLine();
     mcu_fuses = (pgm_read_word(&(mcu_types[mcu_index][1]))>>8);
-    mcu_read_fuse_and_lock_bits_together = (mcu_fuses & 0x80) != 0;
+    fuse_and_lock = ((mcu_fuses & 0x80) != 0);
     mcu_fuses = mcu_fuses & 0x0F;
     if (!interactive_mode) showLed(false,true,3000); // 3 secs of green
   }
@@ -675,24 +680,15 @@ void loop() {  // run over and over again
 
   enterHVProgMode(mcu_mode);
   
-  if (!mcu_read_fuse_and_lock_bits_together)
-    lfuse = readFuse(mcu_mode,LFUSE_SEL);
+
+  lfuse = readFuse(mcu_mode,LFUSE_SEL,fuse_and_lock);
   if (mcu_fuses > 1)
-    hfuse = readFuse(mcu_mode,HFUSE_SEL);
+    hfuse = readFuse(mcu_mode,HFUSE_SEL,fuse_and_lock);
   if (mcu_fuses > 2)
-    efuse = readFuse(mcu_mode,EFUSE_SEL);
-  lock = readFuse(mcu_mode,LOCK_SEL);
+    efuse = readFuse(mcu_mode,EFUSE_SEL,fuse_and_lock);
+  lock = readFuse(mcu_mode,LOCK_SEL,fuse_and_lock);
   osccal = readOSCCAL(mcu_mode);
   leaveHVProgMode();
-
-  if (mcu_read_fuse_and_lock_bits_together) { // fuse and lock bits are in one byte
-    lfuse = lock & 0x3F; // bit 0 - bit 5 are fuse bits
-    if (!(lock & 0x80))  // LB1 at bit 7
-      lock = lock & ~0x02;
-    if (!(lock & 0x40)) // LB2 at bit 6
-      lock = lock & ~0x04;
-    lock = lock | 0xF0;
-  }
 
   printFuses("Current ",mcu_fuses,lfuse,hfuse,efuse);
   if (mcu_index >= 0) printFuses("Default ",mcu_fuses,dlfuse,dhfuse,defuse);
@@ -758,9 +754,9 @@ void loop() {  // run over and over again
         Serial.println(F("done"));
         delay(100);
         Serial.print(F("Verifying ... "));
-        lfuse = readFuse(mcu_mode,LFUSE_SEL);
-        if (mcu_fuses > 1) hfuse = readFuse(mcu_mode,HFUSE_SEL);
-        if (mcu_fuses > 2) efuse = readFuse(mcu_mode,EFUSE_SEL);
+        lfuse = readFuse(mcu_mode,LFUSE_SEL,fuse_and_lock);
+        if (mcu_fuses > 1) hfuse = readFuse(mcu_mode,HFUSE_SEL,fuse_and_lock);
+        if (mcu_fuses > 2) efuse = readFuse(mcu_mode,EFUSE_SEL,fuse_and_lock);
         showLed(true,true,600);
         if (verifyFuses(mcu_fuses,
                         0xFF,0xFF,
@@ -806,7 +802,7 @@ void resurrection(byte dlf, byte dhf, byte def) {
   showLed(true,true,400);
   
   // remove lock by erasing chip - if necessary and allowed
-  lk = readFuse(mcu_mode, LOCK_SEL);
+  lk = readFuse(mcu_mode, LOCK_SEL,fuse_and_lock);
 #ifdef FBD_MODE
   ec_allowed = (digitalRead(ECJUMPER) == LOW);
 #endif
@@ -823,10 +819,10 @@ void resurrection(byte dlf, byte dhf, byte def) {
   showLed(true,true,400);
   
   // see whether successful
-  lk = readFuse(mcu_mode, LOCK_SEL);
-  lf = readFuse(mcu_mode,LFUSE_SEL);
-  if (mcu_fuses > 1) hf = readFuse(mcu_mode,HFUSE_SEL);
-  if (mcu_fuses > 2) ef = readFuse(mcu_mode,EFUSE_SEL);
+  lk = readFuse(mcu_mode, LOCK_SEL,fuse_and_lock);
+  lf = readFuse(mcu_mode,LFUSE_SEL,fuse_and_lock);
+  if (mcu_fuses > 1) hf = readFuse(mcu_mode,HFUSE_SEL,fuse_and_lock);
+  if (mcu_fuses > 2) ef = readFuse(mcu_mode,EFUSE_SEL,fuse_and_lock);
   
   leaveHVProgMode();
   // if successful blink green, otherwise blink red
@@ -885,7 +881,7 @@ void verifyOneByte(int SEL, byte desired, const char* mess) {
   Serial.println(F(" done"));
   delay(200);
   Serial.print(F("Verifying ... "));
-  newval = readFuse(mcu_mode,SEL);
+  newval = readFuse(mcu_mode,SEL,fuse_and_lock);
   showLed(true,true,600);
   if (newval == desired) {
     Serial.print(F("done: Successful in "));
@@ -941,9 +937,22 @@ byte readOSCCAL(int mode) {
 
 
 
-byte readFuse(int mode, int selection) {
-  if (mode == HVSP) return readHVSPFuse(selection);
-  else return readHVPPFuse(mode,selection);
+byte readFuse(int mode, int selection, boolean read_fuse_and_lock) {
+  int locsel = selection;
+  byte fuseval, tempval = 0;
+  if (read_fuse_and_lock) selection = LOCK_SEL;
+  if (mode == HVSP) fuseval = readHVSPFuse(selection);
+  else fuseval = readHVPPFuse(mode,selection);
+  if (!read_fuse_and_lock) return fuseval;
+  else {
+    if (locsel == LFUSE_SEL) return (fuseval | 0xC0);
+    else
+      if (locsel == LOCK_SEL) { 
+        if (fuseval & 0x80) tempval |= 0x02;
+        if (fuseval & 0x40) tempval |= 0x04;
+        return (tempval | 0xF9);
+      } else return 0xFF;
+  }
 }
 
 void burnFuse(int mode, byte val, int selection) {

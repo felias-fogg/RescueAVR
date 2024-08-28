@@ -10,7 +10,7 @@ This sketch can resurrect many classic AVR chips with wrong fuse settings using 
 
 Sometimes, you may erroneously set a fuse bit, such as the clock source bit, and then the chip does not respond to ISP programming anymore. In this case, HV programming can help. One can easily reset all fuses to their factory setting, and then ISP programming is possible again. Note that the sketch does not implement a general HV programmer but can only perform some basic tasks, such as fuse setting and erasing the entire chip.
 
-You need an Arduino Uno, Nano, or Pro Mini, a breadboard, a PNP/NPN transistor pair, a few resistors, a lot of jumper wires, and an external regulated 12-volt supply to do HV programming. If you are the happy owner of a *RecueAVR shield* for an Arduino Uno, then everything is already included and set up. You can build such a shield on your own using the KiCAD design files in the [PCB directory](pcb/), or you can buy the PCBs or a kit at Tindie (very soon).
+You need an Arduino Uno, Nano, or Pro Mini, a breadboard, a PNP/NPN transistor pair, a few resistors, a lot of jumper wires, and an external regulated 12-volt supply to do HV programming. If you are the happy owner of a *RecueAVR shield* for an Arduino Uno, everything is already included and set up. You can build such a shield using the KiCAD design files in the [PCB directory](pcb/), or you can buy the PCBs or a kit at Tindie (very soon).
 
 Furthermore, the sketch is also an alternative firmware for [manekinen's Fusebit Doctor](https://web.archive.org/web/20180225102717/http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en). The pin mapping is a bit different between these two versions. When the sketch is compiled for an Arduino Uno, Nano, or Pro Mini in the Arduino IDE, it will use the Arduino Uno pin mapping. Otherwise, it uses the pin mapping for the Fusebit Doctor. One can also force which version is produced by defining the compile-time constants  `ARDUINO_MODE` or `FBD_MODE`, respectively.
 
@@ -115,7 +115,7 @@ The sketch works with all currently available classic AVR chips (i.e., those tha
 - ATUSB82, ATUSB162
 - **AT90S1200,** **AT90S2313**
 - **AT90S2333, AT90S4433**
-- **AT90S2323, AT90S2343**
+- **<u>AT90S2323</u>, AT90S2343**
 - **AT90S4434, AT90S8535**
 - **AT90S8515**
 - **ATtiny11**
@@ -143,7 +143,7 @@ The sketch works with all currently available classic AVR chips (i.e., those tha
 - **ATmega164, ATmega164P, ATmega324, ATmega324P, ATmega644, ATmega644P**, ATmega644RFR2, **ATmega1284, <u>ATmega1284P</u>,** ATmega1284RFR2
 - ATmega165, ATmega165P, ATmega325, ATmega325P, ATmega3250, ATmega3250P, ATmega645, ATmega645P, ATmega6450, ATmega6450P
 - ATmega406
-- **ATmega48, <u>ATmega48P</u>,** ATmega48PB, <u>**ATmega88**</u>, <u>**ATmega88P**</u>, ATmega88PB, **<u>ATmega168</u>, <u>ATmega168P</u>,** ATmega16PB, <u>**ATmega328**</u>, <u>**ATmega328P**</u>, ATmega328PB
+- **<u>ATmega48</u>, <u>ATmega48P</u>,** ATmega48PB, <u>**ATmega88**</u>, <u>**ATmega88P**</u>, ATmega88PB, **<u>ATmega168</u>, <u>ATmega168P</u>,** ATmega16PB, <u>**ATmega328**</u>, <u>**ATmega328P**</u>, ATmega328PB
 - ATmega169, ATmega169P, ATmega329, ATmega329P, ATmega3290, ATmega329P, ATmega649, ATmega649P, ATmega6490, ATmega6490P
 - ATmega8U2, ATmega16U2, ATmega32U2
 - ATmega16U4, ATmega32U4
