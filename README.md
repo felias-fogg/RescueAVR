@@ -69,7 +69,7 @@ When switched on or after a reset, the sketch will try to determine what kind of
 		R - Start again
 	Choice: 
 
-When this message is shown, you either forgot to insert the MCU, the wiring is wrong, the external power supply is not switched on, or the chip is badly damaged. In the latter case, you might try then to select the programming mode, where *HVPP* is the high-voltage *parallel* programming mode for ATmegas, *HVPP for Tiny* is the same mode for ATtinys (PAGEL and BS1 are both controlled by BS1, and BS2 and XA1 are both controlled by BS2, so PAGEL and XA1 should not be connected to the chip), and *HVSP* is the high-voltage *serial* programming mode for ATtinyX4 and the 8-pin chips. After having selected a programming mode, you can set fuses and lock bits. However, I have never been successful when the MCU could not be identified anymore. In any case, there is more likely a wiring error, or you forgot to plug the MCU into the socket (or breadboard).
+When this message is shown, you either forgot to insert the MCU, the wiring is wrong, the external power supply is not switched on, or the chip is badly damaged. In the latter case, you might try then to select the programming mode, where *HVPP* is the high-voltage *parallel* programming mode for ATmegas, *HVPP for Tiny* is the same mode for ATtinys (PAGEL and BS1 are both controlled by BS1, and BS2 and XA1 are both controlled by BS2, so PAGEL and XA1 should not be connected to the chip), and *HVSP* is the high-voltage *serial* programming mode for ATtinyX4(1) and the 8-pin chips. After having selected a programming mode, you can set fuses and lock bits. However, I have never been successful when the MCU could not be identified anymore. In any case, there is more likely a wiring error, or you forgot to plug the MCU into the socket (or breadboard).
 
 Usually, the chip is detected, and something along the following lines is printed.
 
@@ -122,7 +122,7 @@ The sketch works with all currently available classic AVR chips (i.e., those tha
 - ***ATtiny12*, ATtiny22**
 - ***ATtiny13***
 - ATtiny43U
-- ***ATtiny2313***, **ATtiny4313**
+- ***ATtiny2313***, ***ATtiny4313***
 - ***ATtiny24***, ***ATtiny44***, ***ATtiny84***
 - ATtiny441, ATtiny841
 - **<u>ATtiny15</u>, *ATtiny25*, *ATtiny45*, *ATtiny85*** 
