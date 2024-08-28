@@ -1,0 +1,2 @@
+V1.1:
+- added silkscreen: ATMega161, ATmegaX3, AT90S1200, AT90S4414
