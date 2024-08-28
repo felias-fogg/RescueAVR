@@ -104,7 +104,7 @@ The other options are all self-explanatory. If you want to change individual fus
 
 ### Appendix A: Supported MCUs
 
-The sketch works with all currently available classic AVR chips (i.e., those that can be programmed using ISP) and a few obsolete ones. Here is the list of supported MCUs (currently 131). The bold ones can be programmed using the RescueAVR shield by plugging the chip with a DIP footprint into one of the shield slots. I have tested the underlined ones.
+The sketch works with all currently available classic AVR chips (i.e., those that can be programmed using ISP) and a few obsolete ones. Here is the list of supported MCUs (currently 131). The **bold** ones can be programmed using the RescueAVR shield by plugging the chip with a DIP footprint into one of the shield slots. I have tested the ones in *italics*.
 
 - AT90CAN32, AT90CAN64, AT90CAN128
 - AT90PWM1, AT90PWM2B, AT90PWM3B
@@ -115,35 +115,35 @@ The sketch works with all currently available classic AVR chips (i.e., those tha
 - ATUSB82, ATUSB162
 - **AT90S1200,** **AT90S2313**
 - **AT90S2333, AT90S4433**
-- **<u>AT90S2323</u>, AT90S2343**
+- ***AT90S2323*, AT90S2343**
 - **AT90S4434, AT90S8535**
 - **AT90S8515**
 - **ATtiny11**
-- **<u>ATtiny12</u>, ATtiny22**
-- <u>**ATtiny13**</u>
+- ***ATtiny12*, ATtiny22**
+- ***ATtiny13***
 - ATtiny43U
-- <u>**ATtiny2313**</u>, **ATtiny4313**
-- <u>**ATtiny24**</u>, <u>**ATtiny44**</u>, <u>**ATtiny84**</u>
+- ***ATtiny2313***, **ATtiny4313**
+- ***ATtiny24***, ***ATtiny44***, ***ATtiny84***
 - ATtiny441, ATtiny841
-- **ATtiny15, <u>ATtiny25</u>, <u>ATtiny45</u>, <u>ATtiny85</u>** 
-- **<u>ATtiny2</u>6**
-- **<u>ATtiny261</u>, <u>ATtiny461</u>, <u>ATtiny861</u>**
+- **ATtiny15, *ATtiny25*, *ATtiny45*, *ATtiny85*** 
+- ***ATtiny2*6**
+- ***ATtiny261*, *ATtiny461*, *ATtiny861***
 - ATtiny87, ATtiny167
-- **ATtiny28, <u>ATtiny48</u>, <u>ATtiny88</u>**
+- **ATtiny28, *ATtiny48*, *ATtiny88***
 - ATtiny828
 - ATtiny1634
 - **ATmega8515**
-- <u>**ATmega8535**</u>
-- **<u>ATmega8</u>**, ATmega8HVA, ATmega8HVB
-- **ATmega16**, ATmega16HVA, ATmega16HVB, ATmegaM1, <u>**ATmega32**</u>, ATmega32C1, ATmega32HVB, ATmega64, ATmega64C1, ATmega64HEV2, ATmega64M1, ATmega128, ATmega128RFA1
+- ***ATmega8535***
+- ***ATmega8***, ATmega8HVA, ATmega8HVB
+- **ATmega16**, ATmega16HVA, ATmega16HVB, ATmegaM1, ***ATmega32***, ATmega32C1, ATmega32HVB, ATmega64, ATmega64C1, ATmega64HEV2, ATmega64M1, ATmega128, ATmega128RFA1
 - ATmega640, ATmega1280, ATmega1281, ATmega2560, ATmega2561
 - **ATmega161**, **ATmega162**
 - ATmega103
 - **ATmega163**, **ATmega323**
-- **ATmega164, ATmega164P, ATmega324, ATmega324P, ATmega644, ATmega644P**, ATmega644RFR2, **ATmega1284, <u>ATmega1284P</u>,** ATmega1284RFR2
+- **ATmega164, ATmega164P, ATmega324, ATmega324P, ATmega644, ATmega644P**, ATmega644RFR2, **ATmega1284, *ATmega1284P*,** ATmega1284RFR2
 - ATmega165, ATmega165P, ATmega325, ATmega325P, ATmega3250, ATmega3250P, ATmega645, ATmega645P, ATmega6450, ATmega6450P
 - ATmega406
-- **<u>ATmega48</u>, <u>ATmega48P</u>,** ATmega48PB, <u>**ATmega88**</u>, <u>**ATmega88P**</u>, ATmega88PB, **<u>ATmega168</u>, <u>ATmega168P</u>,** ATmega16PB, <u>**ATmega328**</u>, <u>**ATmega328P**</u>, ATmega328PB
+- ***ATmega48*, *ATmega48P*,** ATmega48PB, ***ATmega88***, ***ATmega88P***, ATmega88PB, ***ATmega168*, *ATmega168P*,** ATmega16PB, ***ATmega328***, ***ATmega328P***, ATmega328PB
 - ATmega169, ATmega169P, ATmega329, ATmega329P, ATmega3290, ATmega329P, ATmega649, ATmega649P, ATmega6490, ATmega6490P
 - ATmega8U2, ATmega16U2, ATmega32U2
 - ATmega16U4, ATmega32U4
@@ -203,10 +203,10 @@ The wiring tables below apply only to the SOIC/DIP versions of the respective MC
 | 5          | XTAL1                    | A0                   |
 | 6          | !OE                      | A3                   |
 | 7          | !WR                      | A2                   |
-| 8          | <u>BS1</u>/PAGEL         | A1                   |
+| 8          | **BS1**/PAGEL         | A1                   |
 | 9          | XA0                      | 10                   |
 | 10         | GND                      | GND                  |
-| 11         | XA1/<u>BS2</u>           | A5                   |
+| 11         | XA1/**BS2**           | A5                   |
 | 12         | DATA0                    | 9                    |
 | 13         | DATA1                    | 8                    |
 | 14         | DATA2                    | 7                    |
@@ -225,8 +225,8 @@ The wiring tables below apply only to the SOIC/DIP versions of the respective MC
 | ---------- | ---------------- | ----------------- |
 | 1          | !WR              | A2                |
 | 2          | XA0              | 10                |
-| 3          | XA1/<u>BS2</u>   | A5                |
-| 4          | PAGEL/<u>BS1</u> | A1                |
+| 3          | XA1/**BS2**   | A5                |
+| 4          | PAGEL/**BS1** | A1                |
 | 5          | Vcc(5V)          | 12                |
 | 6          | GND              | GND               |
 | 7          | XTAL1            | A0                |
@@ -266,8 +266,8 @@ The wiring tables below apply only to the SOIC/DIP versions of the respective MC
 | 14         | XTAL1            | A0                   |
 | 15         | Vcc(5V)          | 12                   |
 | 16         | GND              | GND                  |
-| 17         | PAGEL/<u>BS1</u> | A1                   |
-| 18         | XA1/<u>BS2</u>   | A5                   |
+| 17         | PAGEL/**BS1** | A1                   |
+| 18         | XA1/**BS2**   | A5                   |
 | 19         | XA0              | 10                   |
 | 20         | !WR              | A2                   |
 
@@ -294,9 +294,9 @@ The wiring tables below apply only to the SOIC/DIP versions of the respective MC
 | 15         | !RESET(12V)      | (triggered by 13)    |
 | 16         | !OE              | A3                   |
 | 17         | !WR              | A2                   |
-| 18         | <u>BS1</u>/PAGEL | A1                   |
+| 18         | **BS1**/PAGEL | A1                   |
 | 19         | XA0              | 10                   |
-| 20         | XA1/<u>BS2</u>   | A5                   |
+| 20         | XA1/**BS2**   | A5                   |
 
 
 
