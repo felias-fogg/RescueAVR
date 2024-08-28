@@ -10,19 +10,19 @@ This sketch can resurrect many classic AVR chips with wrong fuse settings using 
 
 Sometimes, you may erroneously set a fuse bit, such as the clock source bit, and then the chip does not respond to ISP programming anymore. In this case, HV programming can help. One can easily reset all fuses to their factory setting, and then ISP programming is possible again. Note that the sketch does not implement a general HV programmer but can only perform some basic tasks, such as fuse setting and erasing the entire chip. Furthermore, you should not apply this technique "in-system" without pre-cautions. HV programming means that you apply 12 V to the RESET pin. So, if you do that "in-system," you should make sure that the RESET line is not connected to the rest of the system (e.g., by a pull-up resistor). 
 
-You need an Arduino Uno, Nano, or Pro Mini, a breadboard, a PNP/NPN transistor pair, a few resistors, a lot of jumper wires, and an external regulated 12-volt supply to do HV programming. If you are the happy owner of a *RecueAVR shield* for an Arduino Uno, everything is already included and set up. You can build such a shield using the KiCAD design files in the [PCB directory](pcb/), or you can buy the PCBs or a kit at Tindie (very soon).
+To do HV programming, you need an Arduino Uno, Nano, or Pro Mini, a breadboard, a PNP/NPN transistor pair, a few resistors, a lot of jumper wires, and an external regulated 12-volt supply. If you are the happy owner of a *RecueAVR shield* for an Arduino Uno, everything is already included and set up. You can build such a shield using the KiCAD design files in the [PCB directory or buy the PCBs or a kit at Tindie (very soon).
 
 Furthermore, the sketch is also an alternative firmware for [manekinen's Fusebit Doctor](https://web.archive.org/web/20180225102717/http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en). The pin mapping is a bit different between these two versions. When the sketch is compiled for an Arduino Uno, Nano, or Pro Mini in the Arduino IDE, it will use the Arduino Uno pin mapping. Otherwise, it uses the pin mapping for the Fusebit Doctor. One can also force which version is produced by defining the compile-time constants  `ARDUINO_MODE` or `FBD_MODE`, respectively.
 
-When you use the sketch, remember to set the monitor baud rate to 19200 baud (no parity, 1 stop-bit).
+Remember to set the monitor baud rate to 19200 baud (no parity, 1 stop-bit) when you use the sketch.
 
 The sketch uses many of the ideas and code of [MightyOhm's HV Rescue Shield 2](https://mightyohm.com/blog/products/hv-rescue-shield-2-x/) and is inspired by [manekinen's Fusebit Doctor](https://web.archive.org/web/20180225102717/http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en). 
 
 ### Using RescueAVR on an Arduino Uno with a Breadboard
 
-Below, you find Fritzing wiring schemes for an ATtiny84, an ATtiny85, and an ATmega328. The full list of supported chips can be found in [Appendix A](#appendixa). You need to consult the particular microcontroller's datasheet for chips other than the ATtinyX4, ATtinyX5, and ATmega(X)8. The pin mapping can be found in the **Memory Programming** section of each datasheet. For some popular MCUs, I have included wiring instructions for the DIP/SOIC versions of the chips in [Appendix B](#appendixb).
+Below, you will find Fritzing wiring schemes for an ATtiny84, an ATtiny85, and an ATmega328. The full list of supported chips can be found in [Appendix A](#appendixa). For chips other than the ATtinyX4, ATtinyX5, and ATmega(X)8, you need to consult the particular microcontroller's datasheet. The pin mapping can be found in the Memory Programming section of each data sheet. For some popular MCUs, I have included wiring instructions for the DIP/SOIC versions of the chips in [Appendix B](#appendixb).
 
-The most important part of high-voltage programming is the ability to put 12 volts into the RESET pin of the MCU. So, you need a regulated 12-volt supply and an electronic switch that applies this voltage to the RESET pin. Such a switch using two transistors is shown below. The transistors I have used are fairly standard ones. You can probably use any other reasonable type. But make sure that the pins are ordered as in the picture, i.e., CBE (otherwise, the Fritzing diagram is not correct).
+The most crucial part of high-voltage programming is the ability to put 12 volts into the RESET pin of the MCU. So, you need a regulated 12-volt supply and an electronic switch that applies this voltage to the RESET pin. Such a switch using two transistors is shown below. The transistors I have used are pretty standard ones. You can probably use any other reasonable type. But make sure that the pins are ordered as in the picture, i.e., CBE (otherwise, the Fritzing diagram is not correct).
 
 ![12V switch](pics/switch.png)
 The wiring is straightforward for small ATtinys because they use serial programming, and you need only a few wires. The Fritzing diagram for an ATtinyX5 looks as follows (and it also applies to ATtiny11, 12, 13, 15, and 22 and a few other 8-pin MCUs).
@@ -31,7 +31,7 @@ The wiring is straightforward for small ATtinys because they use serial programm
 Similarly, the wiring for an ATtinyX4 is quite simple as well. As you can see, one needs just 2 data lines (SDI, SDO), one clock line (SCI), one control line (SII), and in addition one has to switch the RESET line and the Vcc line. 
 ![ATtinyX4 Fritzing sketch](pics/RescueAVR-tinyX4_breadboard.png)
 
-For an ATmegaX8 MCU, the wiring is much more involved. One has to deal with 8 data lines, one clock line, and 9 control lines! This may look like as in the following Fritzing diagram.
+The wiring for an ATmegaX8 MCU is much more involved. One has to deal with 8 data lines, one clock line, and 9 control lines! This may look like the following Fritzing diagram.
 ![ATmega Fritzing sketch](pics/RescueAVR-megaX8_breadboard.png)
 
 When this is put to work in reality, it can look as follows. Check the wiring twice before applying the external power. If 12 volt is applied to a pin that is not the RESET pin, the chip may easily die.
@@ -51,7 +51,7 @@ The Fusebit Doctor can be run stand-alone or connected to a computer. In the sta
 - green LED on for one second, then red LED on for three seconds: chip has been rcognized, but there is not enough information in the firmware to resurrect it,
 - red LED is on for three seconds: no chip recognized.
 
-After having recognized the MCU, the board check whether any lock bits are set. If this is not the case, it tries to set the fuses to a safe default setting. If successful, the green LED flashes for 5 seconds, otherwise the red LED flashes for 5 seconds. If unsuccessful, you can try to set the erase jumper, which allows for erasing the entire chip (including the lock bits) in order to recover it.
+After having recognized the MCU, the board checks whether any lock bits are set. If this is not the case, it tries to set the fuses to a safe default setting. If successful, the green LED flashes for 5 seconds; otherwise, the red LED flashes for 5 seconds. If unsuccessful, you can try to set the erase jumper, which allows for erasing the entire chip (including the lock bits) in order to recover it.
 
 If the serial line on the board is connected to a computer using 19200 baud (no parity, 1 stop-bit) then you can use the ***interactive rescue mode***, which gives you more control than the stand-alone mode.
 
@@ -69,7 +69,7 @@ When switched on or after a reset, the sketch will try to determine what kind of
 		R - Start again
 	Choice: 
 
-When this message is shown, you either forgot to insert the MCU, the wiring is wrong, the external power supply is not switched on, or the chip is badly damaged. In the latter case, you might try then to select the programming mode, where *HVPP* is the high-voltage *parallel* programming mode for ATmegas, *HVPP for Tiny* is the same mode for ATtinys (PAGEL and BS1 are both controlled by BS1, and BS2 and XA1 are both controlled by BS2, so PAGEL and XA1 should not be connected to the chip), and *HVSP* is the high-voltage *serial* programming mode for ATtinyX4(1) and the 8-pin chips. After having selected a programming mode, you can set fuses and lock bits. However, I have never been successful when the MCU could not be identified anymore. In any case, there is more likely a wiring error, or you forgot to plug the MCU into the socket (or breadboard).
+When this message is shown, you either forget to insert the MCU, the wiring is wrong, the external power supply is not switched on, or the chip is badly damaged. In the latter case, you might try then to select the programming mode, where *HVPP* is the high-voltage *parallel* programming mode for ATmegas, *HVPP for Tiny* is the same mode for ATtinys (PAGEL and BS1 are both controlled by BS1, and BS2 and XA1 are both controlled by BS2, so PAGEL and XA1 should not be connected to the chip), and *HVSP* is the high-voltage *serial* programming mode for ATtinyX4(1) and 8-pin chips. After selecting a programming mode, you can set fuses and lock bits. However, I have never been successful when the MCU could not be identified anymore. In any case, there is more likely a wiring error, or you forgot to plug the MCU into the socket (or breadboard).
 
 Usually, the chip is detected, and something along the following lines is printed.
 
