@@ -24,18 +24,18 @@ Below, you find Fritzing wiring schemes for an ATtiny84, an ATtiny85, and an ATm
 
 The most important part of high-voltage programming is the ability to put 12 volts into the RESET pin of the MCU. So, you need a regulated 12-volt supply and an electronic switch that applies this voltage to the RESET pin. Such a switch using two transistors is shown below. The transistors I have used are fairly standard ones. You can probably use any other reasonable type. But make sure that the pins are ordered as in the picture, i.e., CBE (otherwise, the Fritzing diagram is not correct).
 
-![12V switch](switch.png)
+![12V switch](pics/switch.png)
 The wiring is straightforward for small ATtinys because they use serial programming, and you need only a few wires. The Fritzing diagram for an ATtinyX5 looks as follows (and it also applies to ATtiny11, 12, 13, 15, and 22 and a few other 8-pin MCUs).
-![ATtinyX5 Fritzing sketch](RescueAVR-tinyX5_breadboard.png)
+![ATtinyX5 Fritzing sketch](pics/RescueAVR-tinyX5_breadboard.png)
 
 Similarly, the wiring for an ATtinyX4 is quite simple as well. As you can see, one needs just 2 data lines (SDI, SDO), one clock line (SCI), one control line (SII), and in addition one has to switch the RESET line and the Vcc line. 
-![ATtinyX4 Fritzing sketch](RescueAVR-tinyX4_breadboard.png)
+![ATtinyX4 Fritzing sketch](pics/RescueAVR-tinyX4_breadboard.png)
 
 For an ATmegaX8 MCU, the wiring is much more involved. One has to deal with 8 data lines, one clock line, and 9 control lines! This may look like as in the following Fritzing diagram.
-![ATmega Fritzing sketch](RescueAVR-megaX8_breadboard.png)
+![ATmega Fritzing sketch](pics/RescueAVR-megaX8_breadboard.png)
 
 When this is put to work in reality, it can look as follows. Check the wiring twice before applying the external power. If 12 volt is applied to a pin that is not the RESET pin, the chip may easily die.
-![Photo](breadboard.jpg)
+![Photo](pics/breadboard.jpg)
 
 After you made all the connections (and double checked them!), open the Arduino monitor window, switch to 19200 baud, switch the external power supply on, and press reset on the Arduino. You are now in ***interactive rescue mode*** and can do a lot of things (see below).
 
