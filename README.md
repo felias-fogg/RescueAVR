@@ -104,7 +104,7 @@ The other options are all self-explanatory. If you want to change individual fus
 
 ### Appendix A: Supported MCUs
 
-The sketch works with all currently available classic AVR chips (i.e., those that can be programmed using ISP) and a few obsolete ones. Here is the list of supported MCUs (currently 131). The **bold** ones can be programmed using the RescueAVR shield by plugging the chip with a DIP footprint into one of the shield IC sockets. I have tested the ones in *italics*.
+The sketch works with all currently available *classic* AVR chips (i.e., those that can be programmed using ISP) and a few obsolete ones. Here is the list of supported MCUs (currently 131). The **bold** ones can be programmed using the RescueAVR shield by plugging the chip with a DIP footprint into one of the shield IC sockets. I have tested the ones in *italics*.
 
 - AT90CAN32, AT90CAN64, AT90CAN128
 - AT90PWM1, AT90PWM2B, AT90PWM3B
@@ -152,7 +152,7 @@ The sketch works with all currently available classic AVR chips (i.e., those tha
 
 <a name="appendixb"></a>
 
-### Appendix B: Wiring tables for some MCU types
+### Appendix B: Wiring tables for DIP/SOIC variants of some MCUs
 
 The wiring tables below apply only to the SOIC/DIP versions of the respective MCU types. 
 
