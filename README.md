@@ -8,7 +8,7 @@
 
 This sketch can resurrect many classic AVR chips with wrong fuse settings using high-voltage (HV) programming. 
 
-Sometimes, you may erroneously set a fuse bit, such as the clock source bit, and then the chip does not respond to ISP programming anymore. In this case, HV programming can help. One can easily reset all fuses to their factory setting, and then ISP programming is possible again. Note that the sketch does not implement a general HV programmer but can only perform some basic tasks, such as fuse setting and erasing the entire chip.
+Sometimes, you may erroneously set a fuse bit, such as the clock source bit, and then the chip does not respond to ISP programming anymore. In this case, HV programming can help. One can easily reset all fuses to their factory setting, and then ISP programming is possible again. Note that the sketch does not implement a general HV programmer but can only perform some basic tasks, such as fuse setting and erasing the entire chip. Furthermore, you should not apply this technique "in-system" without pre-cautions. HV programming means that you apply 12 V to the RESET pin. So, if you do that "in-system," you should make sure that the RESET line is not connected to the rest of the system (e.g., by a pull-up resistor). 
 
 You need an Arduino Uno, Nano, or Pro Mini, a breadboard, a PNP/NPN transistor pair, a few resistors, a lot of jumper wires, and an external regulated 12-volt supply to do HV programming. If you are the happy owner of a *RecueAVR shield* for an Arduino Uno, everything is already included and set up. You can build such a shield using the KiCAD design files in the [PCB directory](pcb/), or you can buy the PCBs or a kit at Tindie (very soon).
 
@@ -20,7 +20,7 @@ The sketch uses many of the ideas and code of [MightyOhm's HV Rescue Shield 2](h
 
 ### Using RescueAVR on an Arduino Uno with a Breadboard
 
-Below, you find Fritzing wiring schemes for ATtiny84, an ATtiny85, and an ATmega328. The full list of supported chips can be found in [Appendix A](#appendixa). You need to consult the particular microcontroller's datasheet for chips other than the ATtinyX4, ATtinyX5, and ATmegaX8. The pin mapping can be found in the section on ***Memory Programming***. For some popular MCUs, I have included wiring instructions for the DIP/SOIC versions of the chips in [Appendix B](#appendixb).
+Below, you find Fritzing wiring schemes for an ATtiny84, an ATtiny85, and an ATmega328. The full list of supported chips can be found in [Appendix A](#appendixa). You need to consult the particular microcontroller's datasheet for chips other than the ATtinyX4, ATtinyX5, and ATmega(X)8. The pin mapping can be found in the **Memory Programming** section of each datasheet. For some popular MCUs, I have included wiring instructions for the DIP/SOIC versions of the chips in [Appendix B](#appendixb).
 
 The most important part of high-voltage programming is the ability to put 12 volts into the RESET pin of the MCU. So, you need a regulated 12-volt supply and an electronic switch that applies this voltage to the RESET pin. Such a switch using two transistors is shown below. The transistors I have used are fairly standard ones. You can probably use any other reasonable type. But make sure that the pins are ordered as in the picture, i.e., CBE (otherwise, the Fritzing diagram is not correct).
 
@@ -31,7 +31,7 @@ The wiring is straightforward for small ATtinys because they use serial programm
 Similarly, the wiring for an ATtinyX4 is quite simple as well. As you can see, one needs just 2 data lines (SDI, SDO), one clock line (SCI), one control line (SII), and in addition one has to switch the RESET line and the Vcc line. 
 ![ATtinyX4 Fritzing sketch](RescueAVR-tinyX4_breadboard.png)
 
-For an ATmegaX8 MCU, the wiring is much more involved. Instead of 2 data lines, one clock line as well as three control lines (SII, RESET and Vcc), one has to deal with 8 data lines, one clock line, and 9 control lines! This may look like as in the following Fritzing diagram.
+For an ATmegaX8 MCU, the wiring is much more involved. One has to deal with 8 data lines, one clock line, and 9 control lines! This may look like as in the following Fritzing diagram.
 ![ATmega Fritzing sketch](RescueAVR-megaX8_breadboard.png)
 
 When this is put to work in reality, it can look as follows. Check the wiring twice before applying the external power. If 12 volt is applied to a pin that is not the RESET pin, the chip may easily die.
@@ -69,9 +69,9 @@ When switched on or after a reset, the sketch will try to determine what kind of
 		R - Start again
 	Choice: 
 
-When this message is shown, you either forgot to insert the MCU, the wiring is wrong, the external power supply is not switched on, or the chip is badly damaged. In the latter case, you might try then to select the programming mode, where *HVPP* is the high-voltage *parallel* programming mode for ATmegas, *HVPP for Tiny* is the same mode for ATtinys (but PAGEL and BS1 are both controlled by BS1, and BS2 and XA1 are both controlled by BS2, so PAGEL and XA1 should not be connected to the chip), and *HVSP* is the high-voltage *serial* programming mode for ATtinyX4 and the 8-pin chips. After having selected a programming mode, you can try to set fuses and lock bits. However, I have never been successful when the MCU could not be identified anymore. In any case, it is more likely that there is a wiring error or you forgot to plug the MCU into the socket (or breadboard).
+When this message is shown, you either forgot to insert the MCU, the wiring is wrong, the external power supply is not switched on, or the chip is badly damaged. In the latter case, you might try then to select the programming mode, where *HVPP* is the high-voltage *parallel* programming mode for ATmegas, *HVPP for Tiny* is the same mode for ATtinys (PAGEL and BS1 are both controlled by BS1, and BS2 and XA1 are both controlled by BS2, so PAGEL and XA1 should not be connected to the chip), and *HVSP* is the high-voltage *serial* programming mode for ATtinyX4 and the 8-pin chips. After having selected a programming mode, you can set fuses and lock bits. However, I have never been successful when the MCU could not be identified anymore. In any case, there is more likely a wiring error, or you forgot to plug the MCU into the socket (or breadboard).
 
-Usually, the chip is detected, and something along the following line is printed.
+Usually, the chip is detected, and something along the following lines is printed.
 
 	Signature: 1E910A
 	MCU name:  ATtiny2313
@@ -94,7 +94,7 @@ You can then choose from the following menu.
 		R - Restart
 	Action: 
 
-If you are only interested in unbricking your chip, press 'T'. This will check whether lock bits are set, and if so, it will try to erase the chip (if the 'chip erase' jumper on the Fuse-Doctor board is set). After it, it will try to reset the fuses to their default value. If 'T' does not help, you can probably say 'good bye' to the chip. 
+If you are only interested in unbricking your chip, press 'T'. This will check whether lock bits are set, and if so, it will try to erase the chip (if the 'chip erase' jumper on the Fuse-Doctor board is set). After that, it will try to reset the fuses to their default value. If 'T' does not help, you can probably say 'goodbye' to the chip. 
 
 The other options are all self-explanatory. If you want to change individual fuses, you may want to consult the online fuse calculator [AVR® Fuse Calculator](https://www.engbedded.com/fusecalc/) by Mark Hämmerling or the data sheet of the chip. Same goes for the lock byte.
 
@@ -104,7 +104,7 @@ The other options are all self-explanatory. If you want to change individual fus
 
 ### Appendix A: Supported MCUs
 
-The sketch works with all currently available classic AVR chips (i.e., those that can be programmed using ISP) and a few obsolete ones. Here is the list of supported MCUs (currently 131). The **bold** ones can be programmed using the RescueAVR shield by plugging the chip with a DIP footprint into one of the shield slots. I have tested the ones in *italics*.
+The sketch works with all currently available classic AVR chips (i.e., those that can be programmed using ISP) and a few obsolete ones. Here is the list of supported MCUs (currently 131). The **bold** ones can be programmed using the RescueAVR shield by plugging the chip with a DIP footprint into one of the shield IC sockets. I have tested the ones in *italics*.
 
 - AT90CAN32, AT90CAN64, AT90CAN128
 - AT90PWM1, AT90PWM2B, AT90PWM3B
@@ -113,33 +113,33 @@ The sketch works with all currently available classic AVR chips (i.e., those tha
 - ATPWM81
 - ATUSB646/7, ATUSB1286/7
 - ATUSB82, ATUSB162
-- **AT90S1200,** **AT90S2313**
-- **AT90S2333, AT90S4433**
+- **AT90S1200,** <u>**AT90S2313**</u>
+- **AT90S2333, <u>AT90S4433</u>**
 - ***AT90S2323*, AT90S2343**
-- **AT90S4434, AT90S8535**
-- **AT90S8515**
-- **ATtiny11**
+- **AT90S4434, <u>AT90S8535</u>**
+- <u>**AT90S8515**</u>
+- <u>**ATtiny11**</u>
 - ***ATtiny12*, ATtiny22**
 - ***ATtiny13***
 - ATtiny43U
 - ***ATtiny2313***, **ATtiny4313**
 - ***ATtiny24***, ***ATtiny44***, ***ATtiny84***
 - ATtiny441, ATtiny841
-- **ATtiny15, *ATtiny25*, *ATtiny45*, *ATtiny85*** 
+- **<u>ATtiny15</u>, *ATtiny25*, *ATtiny45*, *ATtiny85*** 
 - ***ATtiny2*6**
 - ***ATtiny261*, *ATtiny461*, *ATtiny861***
 - ATtiny87, ATtiny167
 - **ATtiny28, *ATtiny48*, *ATtiny88***
 - ATtiny828
 - ATtiny1634
-- **ATmega8515**
+- <u>**ATmega8515**</u>
 - ***ATmega8535***
 - ***ATmega8***, ATmega8HVA, ATmega8HVB
 - **ATmega16**, ATmega16HVA, ATmega16HVB, ATmegaM1, ***ATmega32***, ATmega32C1, ATmega32HVB, ATmega64, ATmega64C1, ATmega64HEV2, ATmega64M1, ATmega128, ATmega128RFA1
 - ATmega640, ATmega1280, ATmega1281, ATmega2560, ATmega2561
-- **ATmega161**, **ATmega162**
+- **ATmega161**, <u>**ATmega162**</u>
 - ATmega103
-- **ATmega163**, **ATmega323**
+- **<u>ATmega163</u>**, **ATmega323**
 - **ATmega164, ATmega164P, ATmega324, ATmega324P, ATmega644, ATmega644P**, ATmega644RFR2, **ATmega1284, *ATmega1284P*,** ATmega1284RFR2
 - ATmega165, ATmega165P, ATmega325, ATmega325P, ATmega3250, ATmega3250P, ATmega645, ATmega645P, ATmega6450, ATmega6450P
 - ATmega406
