@@ -132,14 +132,14 @@ The sketch works with all currently available *classic* AVR chips (i.e., those t
 - **ATtiny28, *ATtiny48*, *ATtiny88***
 - ATtiny828
 - ATtiny1634
-- <u>**ATmega8515**</u>
+- ***ATmega8515***
 - ***ATmega8535***
 - ***ATmega8***, ATmega8HVA, ATmega8HVB
 - **ATmega16**, ATmega16HVA, ATmega16HVB, ATmegaM1, ***ATmega32***, ATmega32C1, ATmega32HVB, ATmega64, ATmega64C1, ATmega64HEV2, ATmega64M1, ATmega128, ATmega128RFA1
 - ATmega640, ATmega1280, ATmega1281, ATmega2560, ATmega2561
-- **ATmega161**, <u>**ATmega162**</u>
+- **ATmega161**, ***ATmega162***
 - ATmega103
-- **<u>ATmega163</u>**, **ATmega323**
+- ***ATmega163***, **ATmega323**
 - **ATmega164, ATmega164P, ATmega324, ATmega324P, ATmega644, ATmega644P**, ATmega644RFR2, **ATmega1284, *ATmega1284P*,** ATmega1284RFR2
 - ATmega165, ATmega165P, ATmega325, ATmega325P, ATmega3250, ATmega3250P, ATmega645, ATmega645P, ATmega6450, ATmega6450P
 - ATmega406
