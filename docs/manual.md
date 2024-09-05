@@ -113,7 +113,7 @@ The sketch works with all currently available *classic* AVR chips (i.e., mainly 
 - ***AT90S2323*, AT90S2343**
 - **AT90S4434, *AT90S8535***
 - ***AT90S8515***
-- <font color="blue">***ATtiny11***</font>
+- <div style="color:blue">__ATtiny11__</div>
 - ***ATtiny12*, ATtiny22**
 - ***ATtiny13***
 - ATtiny43U
