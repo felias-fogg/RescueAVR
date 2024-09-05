@@ -59,12 +59,7 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [
-        "courtyards_overlap|113755367|95775999|7d4272c2-a7f6-47c0-99d2-b1cedb4f96b6|e37b79bf-98e8-4522-b749-f0e7c6a98bbc",
-        "starved_thermal|142665000|72821843|a42ace62-db6d-4ffa-824f-cefd81e2353f|48f2d327-5f08-419c-9867-dc8c1e773d73|B.Cu",
-        "starved_thermal|154730000|61006000|a42ace62-db6d-4ffa-824f-cefd81e2353f|3b8d1b30-27d4-4457-bb06-215b31c7111b|B.Cu",
-        "starved_thermal|154730000|98471000|a42ace62-db6d-4ffa-824f-cefd81e2353f|a9dbd550-a281-40f6-801a-5579f02b5b6a|B.Cu"
-      ],
+      "drc_exclusions": [],
       "meta": {
         "filename": "board_design_settings.json",
         "version": 2

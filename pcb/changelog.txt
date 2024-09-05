@@ -1,2 +1,29 @@
-V1.1:
+RescueAVR:
+
+V1.0
+
+- initial release
+
+V1.1 (6.9.2024)
+
+- modified silkscreen and 3D model
+
+- removed ATtiny15
+
+
+
+
+ReascueAVR Adapter:
+
+V1.0
+
+- initial release
+
+V1.1
+
 - added silkscreen: ATMega161, ATmegaX3, AT90S1200, AT90S4414
+
+V1.2 (6.9.2024)
+
+- moved silkscreen to the side so that it is always readable, modified
+  3D model

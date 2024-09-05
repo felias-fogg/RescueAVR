@@ -11,7 +11,7 @@
   new, using ideas und snippets from  Jeff Keyzer's sketch HVRescue_Shield.
   In addition, the program can also be run on an Arduino Uno, Nano, or Pro.
 
-  The program can beither compiled for Arduino Uno, Nano, or Pro usage (when
+  The program can be either compiled for Arduino Uno, Nano, or Pro usage (when
   ARDUINO_AVR_UNO ARDUINO_AVR_NANO is defined), or for Fusebit Doctor
   boards (in all other cases). If you want to compile it for the
   Fusebit Doctor board, I recommend to use the MiniCore.  
@@ -29,15 +29,16 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Version 2.3 (21.1.2021)
-  - added support for ATtiny1634
-  - corrected the code for reading the OSCCAL value
-  - added 'R - Restart' to all menus (and changed resurrect to 'T')
+  - added: support for ATtiny1634
+  - fixed: corrected the code for reading the OSCCAL value
+  - added: 'R - Restart' mow in all menus 
+  - changed: resurrect to 'T')
 
 Version 2.3.1 (25.1.2022)
-  - added some explanantion
-  - made compile mode dependend on target board specification 
+  - added: some explanantion
+  - changed: made compile mode dependend on target board specification 
   - fixed a few warnings
-  - added Github actions
+  - added: Github actions
 
 Version 2.4.0 (20.8.2024)
   - added a few MCUs: ATtiny22, ATtiny43U, ATtiny87, ATtiny167, ATmega48PB, 
@@ -45,8 +46,9 @@ Version 2.4.0 (20.8.2024)
     ATmega640, ATmega1280, ATmega1281, ATmega2560, ATmega2561, ATmega8U2, ATmega16U2, 
     ATmega32U2, ATmega16U4, ATmega32U4,
     AT90S2333, ATtiny441, ATtiny841, ATtiny828
-  - renamed ATMEGA -> HVPP and TINY2313 -> TINYHVPP
-  - added ARDUINO_AVR_PRO to the list of boards that can execute the Arduino version of the RescueAVR sketch 
+  - renamed: ATMEGA -> HVPP and TINY2313 -> TINYHVPP
+  - added: ARDUINO_AVR_PRO is now in the list of boards that can execute 
+    the Arduino version of the RescueAVR sketch 
 
 Version 2.5.0 (28.8.2024)
   - fixed: handling of MCUs that read lock and fuse bits into one byte 
@@ -64,7 +66,10 @@ Version 2.5.0 (28.8.2024)
 
 Version 2.6.0 
   - fixed: handling of MCUs that read fuse and lock bits in one byte (AT90S2323 etc.)
+  - fixed: ATtiny11 & 12 handling 
 */
+
+
 
 /* Uncomment one of the following two lines, if you do not want to
    leave the decision on which board the sketch is executed to the
@@ -806,7 +811,11 @@ void resurrection(byte dlf, byte dhf, byte def) {
 #ifdef FBD_MODE
   ec_allowed = (digitalRead(ECJUMPER) == LOW);
 #endif
-  if (lk != 0xFF && ec_allowed) {
+  if (ec_allowed &&
+      (lk != 0xFF &&
+       (mcu_signature != 0x1E9005) &&  // if not ATtiny12, 
+       (mcu_signature != 0x1E9004)) ||  // and not ATTiny11
+      ((lk&0x06 ) != 0x06)) {
     Serial.println(F("Lock byte needs to be cleared. Erase chip ..."));
     eraseChip(mcu_mode); 
     showLed(true,true,400);
@@ -840,7 +849,7 @@ void resurrection(byte dlf, byte dhf, byte def) {
                   ef,def) ||
       (((mcu_signature == 0x1E9005) || // if ATtiny12, 
         (mcu_signature == 0x1E9004)) &&  // or ATTiny11
-       ((lk&0x06 ) == 0x06) && // if LB1 & LB2 are unprogrmmed 
+       ((lk&0x06 ) == 0x06) && // if LB1 & LB2 are unprogrammed 
        verifyFuses(mcu_fuses,
                    0xFF,0xFF,
                    lf,dlf,
@@ -943,6 +952,8 @@ byte readFuse(int mode, int selection, boolean read_fuse_and_lock) {
   if (read_fuse_and_lock) selection = LOCK_SEL;
   if (mode == HVSP) fuseval = readHVSPFuse(selection);
   else fuseval = readHVPPFuse(mode,selection);
+  if (selection == LFUSE_SEL && mcu_signature == 0x1E9004) // read fuse of ATtiny11
+    return (fuseval | 0x80);
   if (!read_fuse_and_lock) return fuseval;
   else {
     if (locsel == LFUSE_SEL) return (fuseval | 0xC0);

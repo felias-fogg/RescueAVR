@@ -6,8 +6,8 @@
 	(paper "A4")
 	(title_block
 		(title "RescueAVR")
-		(date "2024-08-25")
-		(rev "1.0")
+		(date "2024-09-06")
+		(rev "1.1")
 		(company "Arduino Craft Corner")
 	)
 	(lib_symbols
@@ -7225,7 +7225,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical"
 			(at 39.37 39.37 0)
 			(effects
 				(font
@@ -7501,7 +7501,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x10_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical"
 			(at 57.15 36.83 0)
 			(effects
 				(font
@@ -7591,7 +7591,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical"
 			(at 39.37 64.77 0)
 			(effects
 				(font
@@ -7671,7 +7671,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical"
 			(at 57.15 67.31 0)
 			(effects
 				(font
@@ -7747,7 +7747,7 @@
 				)
 			)
 		)
-		(property "Value" "ATmegaX8"
+		(property "Value" "ATtinyX8"
 			(at 107.95 96.52 0)
 			(effects
 				(font
@@ -8615,7 +8615,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "ATtinyX5, ATtiny1X"
+		(property "Value" "ATtiny11, 12, 13, 22, X5,"
 			(at 223.52 52.07 0)
 			(effects
 				(font

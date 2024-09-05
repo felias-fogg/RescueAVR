@@ -6,8 +6,8 @@
 	(paper "A4")
 	(title_block
 		(title "RescueAVR-Adapter")
-		(date "2024-08-25")
-		(rev "1.0")
+		(date "2024-09-06")
+		(rev "1.2")
 	)
 	(lib_symbols
 		(symbol "Connector:Conn_01x08_Socket"
@@ -6467,7 +6467,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical"
 			(at 74.93 153.67 0)
 			(effects
 				(font
@@ -6555,7 +6555,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Package_DIP:DIP-20_W7.62mm"
+		(property "Footprint" "Package_DIP:DIP-20_W7.62mm_Socket"
 			(at 233.68 45.72 0)
 			(effects
 				(font
@@ -6681,7 +6681,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x20_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x20_P2.54mm_Vertical"
 			(at 46.99 168.91 0)
 			(effects
 				(font
@@ -6805,7 +6805,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_DIP:DIP-20_W7.62mm"
+		(property "Footprint" "Package_DIP:DIP-20_W7.62mm_Socket"
 			(at 171.45 45.72 0)
 			(effects
 				(font
@@ -6999,7 +6999,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_DIP:DIP-40_W15.24mm"
+		(property "Footprint" "Package_DIP:DIP-40_W15.24mm_Socket"
 			(at 111.76 68.58 0)
 			(effects
 				(font
@@ -7373,7 +7373,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_DIP:DIP-40_W15.24mm"
+		(property "Footprint" "Package_DIP:DIP-40_W15.24mm_Socket"
 			(at 55.88 68.58 0)
 			(effects
 				(font
