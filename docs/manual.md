@@ -24,7 +24,7 @@ The wiring for an ATmegaX8 MCU is much more involved. One has to deal with 8 dat
 When this is put to work in reality, it can look as follows. Check the wiring twice before applying the external power. If 12 volt is applied to a pin that is not the RESET pin, the chip may easily die.
 ![Photo](../pics/breadboard.jpg)
 
-After you make all the connections (and double-check them!), open the Arduino monitor window, switch to 19200 baud, switch on the external power supply, and reset on the Arduino UNO. You are now in interactive rescue mode and can do many things (see below).
+After you have made all the connections (and double-checked them!), open the Arduino monitor window, switch to 19200 baud, switch on the external power supply, and press the reset button of the Arduino UNO. You are now in interactive rescue mode and can do many things (see below).
 
 ### Using RescueAVR with a RescueAVR Shield
 
@@ -36,14 +36,14 @@ For the ATtinyX6(1) series, the ATtiny(X)232 series, the ATmegaX3, X4, 8535, the
 
 ![](../pics/rescue-step7.jpg)
 
-Before you plug in the target chip, you should plug in the shield and perhaps the adapter board. After connecting the UNO board to a PC, you will enter interactive rescue mode, as described below.
+Before you plug in the target chip, you should plug in the shield on the UNO. After connecting the UNO board to a PC, you will enter interactive rescue mode, as described below.
 
 ### Using RescueAVR on the Fusebit Doctor
 
 The Fusebit Doctor can be run stand-alone or connected to a computer. In the stand-alone mode (no serial communication lines connected to a computer), after power-up, all LEDs are off, and you can insert a chip. After pressing the button, the board will first try to recognize the chip:
 
 - The green LED is on for three seconds: chip has been successfully recognized,
-- the green LED on for one second, then the red LED on for three seconds: The chip has been recognized, but there is not enough information in the firmware to resurrect it,
+- the green LED is on for one second, then the red LED on for three seconds: The chip has been recognized, but there is not enough information in the firmware to resurrect it,
 - the red LED is on for three seconds: no chip has been recognized.
 
 After recognizing the MCU, the board checks whether any lock bits are set. If this is not the case, it tries to set the fuses to a safe default setting. If successful, the green LED flashes for 5 seconds; otherwise, the red LED flashes for 5 seconds. If unsuccessful, you can try to set the erase jumper, which allows for erasing the entire chip (including the lock bits) in order to recover it.
