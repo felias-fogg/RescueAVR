@@ -1,6 +1,6 @@
 # RescueAVR Manual
 
-The RescueAVR sketch can be used to rescue bricked AVR MCUs. You can run it on a UNO (or similar) with the target chip on a breadboard, or you can use it to drive the RescueAVR shield (+ adapter board). Finally, it can be used as an alternative firmware for the Fusebit Doctor.
+The RescueAVR sketch can be used to rescue bricked AVR MCUs. You can run it on a UNO (or similar) with the target chip on a breadboard, or you can use it to drive the [RescueAVR shield (+ adapter board)](../pcb/). Finally, it can be used as an alternative firmware for the [Fusebit Doctor](https://web.archive.org/web/20180225102717/http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en).
 
 Remember to set the monitor baud rate to 19200 baud (no parity, 1 stop-bit) when you use the sketch.
 
