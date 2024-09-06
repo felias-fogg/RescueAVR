@@ -10,45 +10,45 @@ Below, you will find Fritzing wiring schemes for an ATtiny85, an ATtiny84, and a
 
 The most crucial part of high-voltage programming is the ability to put 12 volts into the RESET pin of the MCU. So, you need a regulated 12-volt supply and an electronic switch that applies this voltage to the RESET pin. Such a switch using two transistors is shown below. The transistors I have used are pretty standard ones. You can probably use any other reasonable type. But make sure that the pins are ordered as in the picture, i.e., CBE (otherwise, the Fritzing diagram is incorrect).
 
-![12V switch](/Users/nebel/Documents/GitHub/RescueAVR/pics/switch.png)
+![12V switch](../pics/switch.png)
 
 The wiring is straightforward for small ATtinys because they use serial programming, and you need only a few wires. The Fritzing diagram for an ATtinyX5 looks as follows (and applies to ATtiny11, 12, 13, 22, and a few other 8-pin MCUs).
-![ATtinyX5 Fritzing sketch](/Users/nebel/Documents/GitHub/RescueAVR/pics/RescueAVR-tinyX5_breadboard.png)
+![ATtinyX5 Fritzing sketch](../pics/RescueAVR-tinyX5_breadboard.png)
 
 Similarly, the wiring for an ATtinyX4 is quite simple as well. As you can see, one needs just 2 data lines (SDI, SDO), one clock line (SCI), one control line (SII), and in addition one has to switch the RESET line and the Vcc line. 
-![ATtinyX4 Fritzing sketch](/Users/nebel/Documents/GitHub/RescueAVR/pics/RescueAVR-tinyX4_breadboard.png)
+![ATtinyX4 Fritzing sketch](../pics/RescueAVR-tinyX4_breadboard.png)
 
 The wiring for an ATmegaX8 MCU is much more involved. One has to deal with 8 data lines, one clock line, and 9 control lines! This may look like the following Fritzing diagram.
-![ATmega Fritzing sketch](/Users/nebel/Documents/GitHub/RescueAVR/pics/RescueAVR-megaX8_breadboard.png)
+![ATmega Fritzing sketch](../pics/RescueAVR-megaX8_breadboard.png)
 
 When this is put to work in reality, it can look as follows. Check the wiring twice before applying the external power. If 12 volt is applied to a pin that is not the RESET pin, the chip may easily die.
-![Photo](/Users/nebel/Documents/GitHub/RescueAVR/pics/breadboard.jpg)
+![Photo](../pics/breadboard.jpg)
 
 After you make all the connections (and double-check them!), open the Arduino monitor window, switch to 19200 baud, switch on the external power supply, and reset on the Arduino UNO. You are now in interactive rescue mode and can do many things (see below).
 
 ### Using RescueAVR with a RescueAVR Shield
 
-The RescueAVR shield can be directly plugged into an Arduino UNO board. It has an onboard step-up converter, so you do not need an external voltage source for high-voltage programming. It provides two sockets for HVPP and HVSP. In addition, it contains DIP sockets for the ATinyX5 series, the ATtinyX4 series, and the ATmega(X)8 series. 
+The RescueAVR shield can be directly plugged into an Arduino UNO board. It has an onboard step-up converter, so you do not need an external voltage source for high-voltage programming. It provides two SIL sockets for HVPP and HVSP. In addition, it contains DIP sockets for the ATinyX5 series, the ATtinyX4 series, and the ATmega(X)8 series. 
 
-![RescueAVR](/Users/nebel/Documents/GitHub/RescueAVR/pics/rescue-step6.jpg)
+![RescueAVR](../pics/rescue-step6.jpg)
 
 For the ATtinyX6(1) series, the ATtiny(X)232 series, the ATmegaX3, X4, 8535, the ATmega162, 8515, and pin-compatible chips, one can use an adapter board that plugs into the HVPP/HSP pin sockets. 
 
-![](/Users/nebel/Documents/GitHub/RescueAVR/pics/rescue-step7.jpg)
+![](../pics/rescue-step7.jpg)
 
-Before you plug in the target chip, you should plug in the shield and perhaps the adapter board. After you plug in the target chip and then connect the UNO board, you will enter interactive rescue mode, as described below.
+Before you plug in the target chip, you should plug in the shield and perhaps the adapter board. After connecting the UNO board to a PC, you will enter interactive rescue mode, as described below.
 
 ### Using RescueAVR on the Fusebit Doctor
 
 The Fusebit Doctor can be run stand-alone or connected to a computer. In the stand-alone mode (no serial communication lines connected to a computer), after power-up, all LEDs are off, and you can insert a chip. After pressing the button, the board will first try to recognize the chip:
 
-- green LED on for three seconds: chip has been successfully recognized,
-- green LED on for one second, then red LED on for three seconds: chip has been rcognized, but there is not enough information in the firmware to resurrect it,
-- red LED is on for three seconds: no chip recognized.
+- The green LED is on for three seconds: chip has been successfully recognized,
+- the green LED on for one second, then the red LED on for three seconds: The chip has been recognized, but there is not enough information in the firmware to resurrect it,
+- the red LED is on for three seconds: no chip has been recognized.
 
-After having recognized the MCU, the board checks whether any lock bits are set. If this is not the case, it tries to set the fuses to a safe default setting. If successful, the green LED flashes for 5 seconds; otherwise, the red LED flashes for 5 seconds. If unsuccessful, you can try to set the erase jumper, which allows for erasing the entire chip (including the lock bits) in order to recover it.
+After recognizing the MCU, the board checks whether any lock bits are set. If this is not the case, it tries to set the fuses to a safe default setting. If successful, the green LED flashes for 5 seconds; otherwise, the red LED flashes for 5 seconds. If unsuccessful, you can try to set the erase jumper, which allows for erasing the entire chip (including the lock bits) in order to recover it.
 
-If the serial line on the board is connected to a computer using 19200 baud (no parity, 1 stop-bit) then you can use the ***interactive rescue mode***, which gives you more control than the stand-alone mode.
+If the board's serial line is connected to a computer using 19200 baud (no parity, 1 stop-bit), you can use the ***interactive rescue mode***, which gives you more control than the stand-alone mode.
 
 ### Interactive Rescue Mode
 
@@ -99,7 +99,7 @@ The other options are all self-explanatory. If you want to change individual fus
 
 ### Appendix A: Supported MCUs
 
-The sketch works with all currently available *classic* AVR chips (i.e., mainly those that can be programmed using ISP) and a few obsolete ones. Here is the list of supported MCUs (currently 131). The **bold** ones can be programmed using the RescueAVR shield by plugging the chip with a DIP footprint into one of the shield IC sockets. I have tested the ones in *italics*.
+The sketch works with all currently available *classic* AVR chips (i.e., mainly those that can be programmed using ISP) and a few obsolete ones. Here is the list of supported MCUs (currently 131). The **bold** ones can be programmed using the RescueAVR shield by plugging the chip with a DIP footprint into one of the shield IC sockets. I have tested the *italics* ones.
 
 - AT90CAN32, AT90CAN64, AT90CAN128
 - AT90PWM1, AT90PWM2B, AT90PWM3B
