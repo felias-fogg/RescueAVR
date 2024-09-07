@@ -1,5 +1,7 @@
 # RescueAVR Assembly
 
+The basic kit and the full kit kit [can be bought at Tindie](https://www.tindie.com/products/fogg/rescueavr-hv-fuse-programmer-for-avrs/).
+
 The basic kit consists of:
 
 - one RescueAVR PCB
