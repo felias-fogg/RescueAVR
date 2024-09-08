@@ -2,7 +2,7 @@
 
 //  Title:        RescueAVR
 
-#define VERSION  "2.6.0"
+#define VERSION  "2.7.0"
 
 /*Copyright 2013-2021 by Bernhard Nebel and parts are copyrighted by Jeff Keyzer.
   License: GPLv3
@@ -11,10 +11,9 @@
   new, using ideas und snippets from  Jeff Keyzer's sketch HVRescue_Shield.
   In addition, the program can also be run on an Arduino Uno, Nano, or Pro.
 
-  The program can be either compiled for Arduino Uno, Nano, or Pro usage (when
-  ARDUINO_AVR_UNO ARDUINO_AVR_NANO is defined), or for Fusebit Doctor
-  boards (in all other cases). If you want to compile it for the
-  Fusebit Doctor board, I recommend to use the MiniCore.  
+  The program can be either compiled for Arduino Uno, Nano, or Pro, Mega, or Leonardo, 
+  or for Fusebit Doctor boards (in all other cases). If you want to compile it for the
+  Fusebit Doctor board, I recommend to use the MiniCore.
  
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -67,6 +66,9 @@ Version 2.5.0 (28.8.2024)
 Version 2.6.0 
   - fixed: handling of MCUs that read fuse and lock bits in one byte (AT90S2323 etc.)
   - fixed: ATtiny11 & 12 handling 
+
+Version 2.7.0
+  - added Arduino Mega as a possible host platform
 */
 
 
@@ -77,14 +79,19 @@ Version 2.6.0
 */
 // #define FBD_MODE
 // #define ARDUINO_MODE
+#ifdef ARDUINO_AVR_LEONARDO
+   #error "Arduino Leonardo is not supported"
+#endif
 
 #if !defined(FBD_MODE) && !defined(ARDUINO_MODE)
-  #if !defined(ARDUINO_AVR_UNO) && !defined(ARDUINO_AVR_NANO) && !defined(ARDUINO_AVR_PRO)
+  #if !defined(ARDUINO_AVR_UNO) && !defined(ARDUINO_AVR_NANO) && !defined(ARDUINO_AVR_PRO) && \
+    !defined(ARDUINO_AVR_MEGA) && !defined(ARDUINO_AVR_MEGA2560) 
     #define FBD_MODE
   #else
     #define ARDUINO_MODE
   #endif
 #endif
+
 
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
@@ -537,6 +544,11 @@ void setup() { // run once, when the sketch starts
   char modec = ' ';
   
   // Set up control lines for HV parallel programming
+
+  if (!Serial) {
+    while (!Serial);
+    delay(500);
+  }
   
   setData(0);
   setDataDirection(INPUT);
@@ -734,7 +746,10 @@ void loop() {  // run over and over again
   
     enterHVProgMode(mcu_mode);
     switch (action) {
-    case 'R': wdt_enable(WDTO_15MS); delay(100); break;
+    case 'R':
+      wdt_enable(WDTO_15MS);
+      while (1);
+      break;
     case 'T':
       if (mcu_index >= 0) resurrection(dlfuse, dhfuse, defuse);
       break;
