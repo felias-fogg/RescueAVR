@@ -2,7 +2,7 @@
 
 //  Title:        RescueAVR
 
-#define VERSION  "3.0.0"
+#define VERSION  "3.0.1"
 
 /*Copyright 2013-2021 by Bernhard Nebel and parts are copyrighted by Jeff Keyzer.
   License: GPLv3
@@ -77,6 +77,9 @@ Version 3.0.0 (9.9.2024)
     immediately after the command character
   - added: Leonardo as host board
   - fixed: questions for fuse bytes does now appear only once
+
+Version 3.0.1 (9.9.2024)
+  - changed: request to 'restart' instead of 'reset' 
 */
 
 
@@ -605,7 +608,7 @@ boolean startup(void) {
   }
   if (mcu_mode > HVSP) {
     Serial.println(F("No chip found!"));
-    Serial.println(F("Insert chip and reset or give details."));
+    Serial.println(F("Insert chip and restart or give details."));
     if (!interactive_mode) {
       showLed(true,false,3000); // 3 secs of red
       while (true) { };
