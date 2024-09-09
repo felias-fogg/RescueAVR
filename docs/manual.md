@@ -57,7 +57,7 @@ To use RescueAVR in interactive mode, you should be connected to the Fusebit Doc
 When switched on or after a reset, the sketch will try to determine what kind of programming mode the MCU uses and which MCU is connected. If unsuccessful, the following is displayed:
 
 	No chip found!
-	Insert chip and reset or give details.
+	Insert chip and restart or give details.
 	
 	Choose from:
 		P - HVPP
