@@ -52,6 +52,8 @@ If the board's serial line is connected to a computer using 19200 baud (no parit
 
 ### Interactive Rescue Mode
 
+To use RescueAVR in interactive mode, you should be connected to the Fusebit Doctor or Arduino by a serial line with 19200 baud, 1 stop bit, and no parity. This can be accomplished by using the Arduino monitor window or any serial line client (e.g., cu, screen, or PuTTY). 
+
 When switched on or after a reset, the sketch will try to determine what kind of programming mode the MCU uses and which MCU is connected. If unsuccessful, the following is displayed:
 
 	No chip found!
@@ -91,7 +93,9 @@ You can then choose from the following menu.
 
 If you are only interested in unbricking your chip, press 'T'. This will check whether lock bits are set, and if so, it will try to erase the chip (if the 'chip erase' jumper on the Fuse-Doctor board is set). After that, it will try to reset the fuses to their default value. If 'T' does not help, you can probably say 'goodbye' to the chip. 
 
-The other options are all self-explanatory. If you want to change individual fuses, you may want to consult the online fuse calculator [AVR® Fuse Calculator](https://www.engbedded.com/fusecalc/) by Mark Hämmerling or the data sheet of the chip. The same goes for the lock byte.
+The other options are all self-explanatory. If you want to change individual fuses, you may wish to consult the online fuse calculator [AVR Fuse Calculator](https://www.engbedded.com/fusecalc/) by Mark Hämmerling or the chip datasheet. The same goes for the lock byte.
+
+When using the Arduino monitor window, you can enter a new fuse value immediately after the command. For example, typing `L7F` will change the low fuse to 0x7F (if possible).
 
 
 

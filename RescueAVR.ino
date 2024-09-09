@@ -2,7 +2,7 @@
 
 //  Title:        RescueAVR
 
-#define VERSION  "2.7.0"
+#define VERSION  "3.0.0"
 
 /*Copyright 2013-2021 by Bernhard Nebel and parts are copyrighted by Jeff Keyzer.
   License: GPLv3
@@ -63,12 +63,20 @@ Version 2.5.0 (28.8.2024)
   - added: restart option when asking for number of fuse bytes
   - removed: attempting to clear lock bits because this always fails! 
 
-Version 2.6.0 
+Version 2.6.0 (18.8.2024)
   - fixed: handling of MCUs that read fuse and lock bits in one byte (AT90S2323 etc.)
   - fixed: ATtiny11 & 12 handling 
 
-Version 2.7.0
+Version 2.7.0 (8.9.2024)
   - added Arduino Mega as a possible host platform
+
+Version 3.0.0 (9.9.2024)
+  - changed: program logic does not require software resets any longer
+  - changed: "setting xxx fuse" -> "new xxx fuse value"
+  - added: when using the Arduino monitor window, you can now write the new byte value
+    immediately after the command character
+  - added: Leonardo as host board
+  - fixed: questions for fuse bytes does now appear only once
 */
 
 
@@ -79,13 +87,14 @@ Version 2.7.0
 */
 // #define FBD_MODE
 // #define ARDUINO_MODE
-#ifdef ARDUINO_AVR_LEONARDO
-   #error "Arduino Leonardo is not supported"
-#endif
+//#ifdef ARDUINO_AVR_LEONARDO
+//   #error "Arduino Leonardo is not supported"
+//#endif
 
 #if !defined(FBD_MODE) && !defined(ARDUINO_MODE)
   #if !defined(ARDUINO_AVR_UNO) && !defined(ARDUINO_AVR_NANO) && !defined(ARDUINO_AVR_PRO) && \
-    !defined(ARDUINO_AVR_MEGA) && !defined(ARDUINO_AVR_MEGA2560) 
+    !defined(ARDUINO_AVR_MEGA) && !defined(ARDUINO_AVR_MEGA2560) && !defined(ARDUINO_AVR_LEONARDO) && \
+    !defined(ARDUINO_SAMD_ZERO)
     #define FBD_MODE
   #else
     #define ARDUINO_MODE
@@ -94,7 +103,6 @@ Version 2.7.0
 
 
 #include <avr/pgmspace.h>
-#include <avr/wdt.h>
 
 // communication speed 
 #define  BAUD         19200    // Serial port rate at which to talk to PC
@@ -458,6 +466,7 @@ byte XA1 = ORIGXA1; // ATtiny2313: XA1 = BS2
 #define HVSP_WRITE_LFUSE_INSTR4  B01101100
 
 // HFUSE
+// Note: not all ATtiny's have an HFUSE
 #define HVSP_READ_HFUSE_DATA     B00000100
 #define HVSP_READ_HFUSE_INSTR1   B01001100
 #define HVSP_READ_HFUSE_INSTR2   B01111010
@@ -529,56 +538,16 @@ int mcu_index = -1; // index into mcu_types array - see above
 unsigned long mcu_signature = 0; // signature as read from chip
 boolean ec_allowed = true; // whether chip erase is allowed - only relevant for FBD
 
-// This does not do anything under Arduino, since the bootloader will take care 
-// but when running standalone it guards against reset loops caused by
-// watchdog resets
-void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3"))) __attribute__((used));
-void wdt_init(void)
-{
-  MCUSR = 0;
-  wdt_disable();
-  return;
-} 
-
 void setup() { // run once, when the sketch starts
-  char modec = ' ';
   
-  // Set up control lines for HV parallel programming
-
-  if (!Serial) {
-    while (!Serial);
-    delay(500);
-  }
-  
-  setData(0);
-  setDataDirection(INPUT);
-
 #ifdef FBD_MODE
   pinMode(ECJUMPER, INPUT_PULLUP); // the jumper that allows chip erase
-#endif
-  pinMode(VCC, OUTPUT);
-  pinMode(RDY, INPUT);
-  pinMode(OE, OUTPUT);
-  pinMode(WR, OUTPUT);
-  pinMode(BS1, OUTPUT);
-  pinMode(XA0, OUTPUT);
-  pinMode(XA1, OUTPUT);
-  pinMode(PAGEL, OUTPUT);
-  pinMode(RST, OUTPUT);  // 12V Reset signal
-  pinMode(BS2, OUTPUT);
-  pinMode(XTAL1, OUTPUT);
-
-#ifdef FBD_MODE
   if (digitalRead(0) == LOW)
   interactive_mode = false; // no RS232 connection!
 #endif
-
-  // Initialize output pins as needed
-  digitalWrite(RST, LOW);  // Turn off 12V 
-
-  digitalWrite(VCC, VCCOFF); // Turn off VCC
-
+  delay(2000);
   Serial.begin(BAUD);  // Open serial port
+  while (!Serial); // wait for serial line on Leaonardo to come up
   Serial.println();
   Serial.println();
   Serial.print(F("RescueAVR Version "));
@@ -588,14 +557,46 @@ void setup() { // run once, when the sketch starts
 #ifdef FBD_MODE
   Serial.println(F("running on Fusebit-Doctor Board"));
 #else
-  Serial.println(F("running on Arduino"));
+  Serial.println(F("running on Arduino board"));
 #endif
   Serial.println();
+}
 
+boolean startup(void) {
+  char modec = ' ';
+
+  XA1 = ORIGXA1;
+  PAGEL = ORIGPAGEL;
+  setData(0);
+  setDataDirection(INPUT);
+  pinMode(RST, OUTPUT);  // 12V Reset signal
+  digitalWrite(RST, LOW);  // Turn off 12V 
+  pinMode(VCC, OUTPUT);
+  digitalWrite(VCC, VCCOFF); // Turn off VCC
+  pinMode(RDY, INPUT);
+  digitalWrite(RDY, LOW);
+  pinMode(OE, OUTPUT);
+  digitalWrite(OE, LOW);
+  pinMode(WR, OUTPUT);
+  digitalWrite(WR, LOW);
+  pinMode(BS1, OUTPUT);
+  digitalWrite(BS1, LOW);
+  pinMode(XA0, OUTPUT);
+  digitalWrite(XA0, LOW);
+  pinMode(XA1, OUTPUT);
+  digitalWrite(XA1, LOW);
+  pinMode(PAGEL, OUTPUT);
+  digitalWrite(PAGEL, LOW);
+  pinMode(BS2, OUTPUT);
+  digitalWrite(BS2, LOW);
+  pinMode(XTAL1, OUTPUT);
+  digitalWrite(XTAL1, LOW);
+  
+  Serial.println();
   for (mcu_mode = HVPP; mcu_mode <= HVSP; mcu_mode++) {
     enterHVProgMode(mcu_mode);
     mcu_signature = readSig(mcu_mode);
-    leaveHVProgMode();
+    leaveHVProgMode(mcu_mode);
     // Serial.print(F("DEBUG: SIG="));
     // Serial.println(mcu_signature,HEX);
     if ((mcu_signature>>16) == 0x1E && // start of signature and 
@@ -631,7 +632,7 @@ void setup() { // run once, when the sketch starts
     case 'P': mcu_mode = HVPP; break;
     case 'T': mcu_mode = TINYHVPP; break;
     case 'S': mcu_mode = HVSP; break;
-    case 'R': wdt_enable(WDTO_15MS); delay(100); break;
+    case 'R': return false; break;
     }
   }
   Serial.print(F("Signature: "));
@@ -658,15 +659,16 @@ void setup() { // run once, when the sketch starts
       while (true) { };
     } else {
       mcu_fuses = 0;
+      delay(10);
       while (Serial.available()) Serial.read();
       while (mcu_fuses < 1 || mcu_fuses > 3) {
         Serial.print(F("# of fuse bytes (1-3), R to abort: "));
         while (!Serial.available())  { };
         mcu_fuses = Serial.read();
+        Serial.println(mcu_fuses);
         Serial.println((char)mcu_fuses);
         if (toupper(mcu_fuses) == 'R') {
-          wdt_enable(WDTO_15MS);
-          delay(100);
+          return false;
         }
         while (Serial.available()) Serial.read();
         mcu_fuses = mcu_fuses - '0';
@@ -681,6 +683,7 @@ void setup() { // run once, when the sketch starts
     mcu_fuses = mcu_fuses & 0x0F;
     if (!interactive_mode) showLed(false,true,3000); // 3 secs of green
   }
+  return true;
 }
 
 void loop() {  // run over and over again
@@ -688,6 +691,8 @@ void loop() {  // run over and over again
   byte hfuse = 0, lfuse = 0, efuse = 0, lock = 0, osccal = 0;  // fuse and lock values
   byte dhfuse = 0, dlfuse = 0, defuse = 0;  // default values
   char action = ' ';
+
+  while (!startup());
   
   if (mcu_index >= 0) {
     dlfuse = pgm_read_word(&(mcu_types[mcu_index][1]))&0xFF;
@@ -705,7 +710,7 @@ void loop() {  // run over and over again
     efuse = readFuse(mcu_mode,EFUSE_SEL,fuse_and_lock);
   lock = readFuse(mcu_mode,LOCK_SEL,fuse_and_lock);
   osccal = readOSCCAL(mcu_mode);
-  leaveHVProgMode();
+  leaveHVProgMode(mcu_mode);
 
   printFuses("Current ",mcu_fuses,lfuse,hfuse,efuse);
   if (mcu_index >= 0) printFuses("Default ",mcu_fuses,dlfuse,dhfuse,defuse);
@@ -747,8 +752,7 @@ void loop() {  // run over and over again
     enterHVProgMode(mcu_mode);
     switch (action) {
     case 'R':
-      wdt_enable(WDTO_15MS);
-      while (1);
+      return;
       break;
     case 'T':
       if (mcu_index >= 0) resurrection(dlfuse, dhfuse, defuse);
@@ -789,24 +793,24 @@ void loop() {  // run over and over again
         }
       }
       break;
-    case 'L': setAndVerifyOneByte(LFUSE_SEL, "setting low fuse");
+    case 'L': setAndVerifyOneByte(LFUSE_SEL, "low fuse value");
       break;
     case 'H': 
       if (mcu_fuses > 1) {
-        setAndVerifyOneByte(HFUSE_SEL, "setting high fuse");
+        setAndVerifyOneByte(HFUSE_SEL, "high fuse value");
       }
       break;
     case 'X':
       if (mcu_fuses > 2) {
-        setAndVerifyOneByte(EFUSE_SEL, "setting extended fuse");
+        setAndVerifyOneByte(EFUSE_SEL, "extended fuse value");
       }
       break;
     case 'K':
-      setAndVerifyOneByte(LOCK_SEL, "setting lock byte");
+      setAndVerifyOneByte(LOCK_SEL, "lock byte");
       break;
     }
     Serial.println();
-    leaveHVProgMode();
+    leaveHVProgMode(mcu_mode);
   } else { // non-interactive mode
     resurrection(dlfuse, dhfuse, defuse);
     Serial.println(F("Bye, bye ..."));
@@ -848,7 +852,7 @@ void resurrection(byte dlf, byte dhf, byte def) {
   if (mcu_fuses > 1) hf = readFuse(mcu_mode,HFUSE_SEL,fuse_and_lock);
   if (mcu_fuses > 2) ef = readFuse(mcu_mode,EFUSE_SEL,fuse_and_lock);
   
-  leaveHVProgMode();
+  leaveHVProgMode(mcu_mode);
   // if successful blink green, otherwise blink red
   Serial.println(F("Verify fuse settings..."));
   showLed(true,false,100);
@@ -883,11 +887,20 @@ void resurrection(byte dlf, byte dhf, byte def) {
 
 void setAndVerifyOneByte(int SEL, const char* mess) {
   int toburn;
+  char testchar;
+  boolean directbyte = false;
 
-  while (Serial.available()) Serial.read();
+  if (Serial.available()) {
+    testchar = toupper(Serial.peek());
+    if ((testchar >= '0' && testchar <= '9') || (testchar >= 'A' && testchar <= 'F'))
+      directbyte = true;
+  }
+  if (!directbyte) {
+    while (Serial.available()) Serial.read();
+  }
   Serial.print(F("New "));
   Serial.print(mess);
-  Serial.print(F(" : "));
+  Serial.print(F(": "));
   toburn = askByte();
   if (toburn >= 0x00) {
     Serial.print(F("\nSetting "));
@@ -1041,10 +1054,10 @@ void enterHVProgMode(int mode) {
   delay(1);
 }
 
-void leaveHVProgMode() {
+void leaveHVProgMode(int mode) {
   setData(0);
   setDataDirection(INPUT);
-  
+
   PAGEL = ORIGPAGEL;
   XA1 = ORIGXA1;
   digitalWrite(OE, HIGH);
@@ -1080,7 +1093,7 @@ void eraseHVSP(void) {
 }
 
 
-void burnHVPPFuse(int mode, byte fuse, int select)  // write high or low fuse to AVR
+void burnHVPPFuse(int mode, byte fuse, int select)  // write extended, high or low fuse to AVR
 {
   
   // Send command to enable fuse programming mode
@@ -1173,7 +1186,7 @@ void burnHVSPFuse(byte fuse, int select) {
 byte readHVPPFuse(int mode, int select) {
   byte fuse;
   
-  sendHVPPCmdOrAddr(mode,true,B00000100);  // Send command to read fuse bits
+  sendHVPPCmdOrAddr(mode,true,B00000100);  // Send command to read fuseand lock  bits
   
   // Configure DATA as input so we can read back fuse values from target
   setData(0);
