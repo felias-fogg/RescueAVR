@@ -2,7 +2,7 @@
 
 //  Title:        RescueAVR
 
-#define VERSION  "3.0.1"
+#define VERSION  "3.0.2"
 
 /*Copyright 2013-2021 by Bernhard Nebel and parts are copyrighted by Jeff Keyzer.
   License: GPLv3
@@ -80,6 +80,10 @@ Version 3.0.0 (9.9.2024)
 
 Version 3.0.1 (9.9.2024)
   - changed: request to 'restart' instead of 'reset' 
+
+Version 3.0.2 (10.9.2024)
+  - fixed: for AT90S8515 and AT90S2313, it seems necessary to use multiple attempts to write the lock byte
+  - fixed: for the AT90S chips, longer WR pulses are necessary for trhe erase function 
 */
 
 
@@ -1081,7 +1085,7 @@ void eraseHVPP(int mode) {
   
   sendHVPPCmdOrAddr(mode,true,B10000000); 
   digitalWrite(WR, LOW); 
-  delay(1);
+  delay(10); //usually 1 is enough, but the older S90 nee longer!
   digitalWrite(WR, HIGH);
   //delay(100);
   
@@ -1098,56 +1102,60 @@ void eraseHVSP(void) {
 
 void burnHVPPFuse(int mode, byte fuse, int select)  // write extended, high or low fuse to AVR
 {
+  for (uint8_t t=0; t < 3; t++) {
+    // for some of the AT90S chips, multiple attempts appear to be necessary!
+    
+    // Send command to enable fuse programming mode
+    if (select == LOCK_SEL)   sendHVPPCmdOrAddr(mode,true,B00100000);  
+    else sendHVPPCmdOrAddr(mode,true,B01000000);  
+    
+    // Enable data loading
+    digitalWrite(XA1, LOW);
+    digitalWrite(XA0, HIGH);
+    // Specify low byte
+    digitalWrite(BS1, LOW); 
+    if (mode != TINYHVPP)
+      digitalWrite(BS2, LOW);  
+    delay(1);
+    
+    // Load fuse value into target
+    setData(fuse);
+    setDataDirection(OUTPUT);
+    
+    strobe_xtal();  // latch DATA
+    
+    setData(0);
+    setDataDirection(INPUT);
+    
+    // Decide which fuse location to burn
+    switch (select) { 
+    case HFUSE_SEL:
+      digitalWrite(BS1, HIGH); // program HFUSE
+      digitalWrite(BS2, LOW);
+      break;
+    case LFUSE_SEL:
+      digitalWrite(BS1, LOW);  // program LFUSE
+      digitalWrite(BS2, LOW);
+      break;
+    case EFUSE_SEL:
+      digitalWrite(BS1, LOW);  // program EFUSE
+      digitalWrite(BS2, HIGH);
+      break;
+    }
+    delay(1);
+    // Burn the fuse
+    digitalWrite(WR, LOW); 
+    delayMicroseconds(1600);
+    digitalWrite(WR, HIGH);
+    delay(10);
   
-  // Send command to enable fuse programming mode
-  if (select == LOCK_SEL)   sendHVPPCmdOrAddr(mode,true,B00100000);  
-  else sendHVPPCmdOrAddr(mode,true,B01000000);  
+    waitForHigh(RDY); // when RDY goes high, we are done
   
-  // Enable data loading
-  digitalWrite(XA1, LOW);
-  digitalWrite(XA0, HIGH);
-  // Specify low byte
-  digitalWrite(BS1, LOW); 
-  if (mode != TINYHVPP)
-    digitalWrite(BS2, LOW);  
-  delay(1);
-  
-  // Load fuse value into target
-  setData(fuse);
-  setDataDirection(OUTPUT);
-  
-  strobe_xtal();  // latch DATA
-
-  setData(0);
-  setDataDirection(INPUT);
-   
-  // Decide which fuse location to burn
-  switch (select) { 
-  case HFUSE_SEL:
-    digitalWrite(BS1, HIGH); // program HFUSE
+    // Reset control lines to original state
+    digitalWrite(BS1, LOW);
     digitalWrite(BS2, LOW);
-    break;
-  case LFUSE_SEL:
-    digitalWrite(BS1, LOW);  // program LFUSE
-    digitalWrite(BS2, LOW);
-    break;
-  case EFUSE_SEL:
-    digitalWrite(BS1, LOW);  // program EFUSE
-    digitalWrite(BS2, HIGH);
-    break;
+    delay(20);
   }
-  delay(1);
-   // Burn the fuse
-  digitalWrite(WR, LOW); 
-  delay(1);
-  digitalWrite(WR, HIGH);
-  //delay(100);
-  
-  waitForHigh(RDY); // when RDY goes high, we are done
-  
-  // Reset control lines to original state
-  digitalWrite(BS1, LOW);
-  digitalWrite(BS2, LOW);
 }
 
 void burnHVSPFuse(byte fuse, int select) {

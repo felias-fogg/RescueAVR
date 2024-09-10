@@ -38,6 +38,9 @@ jobs:
         arduino-boards-fqbn:
           - arduino:avr:uno
           - arduino:avr:nano
+          - arduino:avr:mega
+          - arduino:avr:leonardo
+          - arduino:avr:pro
           - MiniCore:avr:328:clock=1MHz_internal
 
         # Choose the right platform for the boards we want to test. (maybe in the future Arduino will automatically do this for you)
