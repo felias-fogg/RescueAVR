@@ -34,7 +34,7 @@ The RescueAVR shield can be directly plugged into an Arduino UNO board. It has a
 
 ![RescueAVR](../pics/rescue-step6.jpg)
 
-For the ATtinyX6(1) series, the ATtiny(X)232 series, the ATmegaX3, X4, 8535, the ATmega162, 8515, and pin-compatible chips, one can use an adapter board that plugs into the HVPP/HSP pin sockets. 
+For the ATtinyX6(1) series, the ATtiny(X)232 series, the ATmegaX3, X4, 8535, the ATmega162, 8515, and pin-compatible chips, one can use an adapter board that plugs into the HVPP/HVSP pin sockets. 
 
 ![](../pics/rescue-step7.jpg)
 
@@ -109,19 +109,20 @@ When using the Arduino monitor window, you can enter a new fuse value immediatel
 The sketch works with all currently available *classic* AVR chips (i.e., mainly those that can be programmed using ISP) and a few obsolete ones. Here is the list of supported MCUs (currently 131). The **bold** ones can be programmed using the RescueAVR shield by plugging the chip with a DIP footprint into one of the shield IC sockets. I have tested the *italics* ones.
 
 - AT90CAN32, AT90CAN64, AT90CAN128
-- AT90PWM1, AT90PWM2B, AT90PWM3B
-- AT90PWM2, AT90PWM3
-- ATPWM216, ATPWM316
-- ATPWM81
-- ATUSB646/7, ATUSB1286/7
-- ATUSB82, ATUSB162
+- AT90PWM1/AT90PWM2B/AT90PWM3B
+- AT90PWM2/AT90PWM3
+- AT90PWM216/AT90PWM316
+- AT90PWM81, ATP90WM161
+- AT90USB646/7, AT90USB1286/7
+- AT90USB82, AT90USB162
 - **AT90S1200,** ***AT90S2313***
 - **AT90S2333, *AT90S4433***
 - ***AT90S2323*, AT90S2343**
 - **AT90S4434, *AT90S8535***
-- ***AT90S8515***
+- **AT90S4414**, ***AT90S8515***
 - ___ATtiny11___
-- ***ATtiny12*, ATtiny22**
+- ***ATtiny12***
+- **ATtiny22**
 - ***ATtiny13***
 - ATtiny43U
 - ***ATtiny2313***, ***ATtiny4313***
@@ -132,22 +133,23 @@ The sketch works with all currently available *classic* AVR chips (i.e., mainly 
 - ***ATtiny2*6**
 - ***ATtiny261*, *ATtiny461*, *ATtiny861***
 - ATtiny87, ATtiny167
-- **ATtiny28, *ATtiny48*, *ATtiny88***
+- **ATtiny28**
+- ***ATtiny48*, *ATtiny88***
 - ATtiny828
 - ATtiny1634
 - ***ATmega8515***
 - ***ATmega8535***
 - ***ATmega8***, ATmega8HVA, ATmega8HVB
-- **ATmega16**, ATmega16HVA, ATmega16HVB, ATmegaM1, ***ATmega32***, ATmega32C1, ATmega32HVB, ATmega64, ATmega64C1, ATmega64HEV2, ATmega64M1, ATmega128, ATmega128RFA1
+- **ATmega16**, ATmega16HVA, ATmega16HVB, ATmega16M1, ***ATmega32***, ATmega32C1, ATmega32M1, ATmega32HVB, ATmega64, ATmega64C1, ATmega64HEV2, ATmega64M1, ATmega64RFR2, ATmega128, ATmega128RFA1, ATmega128RFR2, ATmega256RFR2
 - ATmega640, ATmega1280, ATmega1281, ATmega2560, ATmega2561
 - **ATmega161**, ***ATmega162***
 - ATmega103
 - ***ATmega163***, **ATmega323**
-- **ATmega164, ATmega164P, ATmega324, ATmega324P, ATmega644, ATmega644P**, ATmega644RFR2, **ATmega1284, *ATmega1284P*,** ATmega1284RFR2
+- **ATmega164, ATmega164P, ATmega324, ATmega324P**, Atmega324PB, **ATmega644, ATmega644P**, ATmega644RFR2, **ATmega1284, *ATmega1284P*,** ATmega1284RFR2, ATmega2564RFR2
 - ATmega165, ATmega165P, ATmega325, ATmega325P, ATmega3250, ATmega3250P, ATmega645, ATmega645P, ATmega6450, ATmega6450P
 - ATmega406
 - ***ATmega48*, *ATmega48P*,** ATmega48PB, ***ATmega88***, ***ATmega88P***, ATmega88PB, ***ATmega168*, *ATmega168P*,** ATmega16PB, ***ATmega328***, ***ATmega328P***, ATmega328PB
-- ATmega169, ATmega169P, ATmega329, ATmega329P, ATmega3290, ATmega329P, ATmega649, ATmega649P, ATmega6490, ATmega6490P
+- ATmega169, ATmega169P, ATmega329, ATmega329P, ATmega3290, ATmega3290P, ATmega649, ATmega649P, ATmega6490, ATmega6490P
 - ATmega8U2, ATmega16U2, ATmega32U2
 - ATmega16U4, ATmega32U4
 
