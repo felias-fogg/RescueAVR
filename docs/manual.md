@@ -2,20 +2,22 @@
 
 The RescueAVR sketch can be used to rescue bricked AVR MCUs. You can run it on a UNO (or similar) with the target chip on a breadboard, or you can use it to drive the [RescueAVR shield (+ adapter board)](../pcb/), which [you can buy at Tindie](https://www.tindie.com/products/fogg/rescueavr-hv-fuse-programmer-for-avrs/). Finally, it can be used as an alternative firmware for the [Fusebit Doctor](https://web.archive.org/web/20180225102717/http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en).
 
+One word of caution: Since the GPIO pins of two different MCUs will be directly connected to each other, you should upload the sketch __before__ connecting the target chip to the UNO board (or plugging in the RescueAVR shield). Otherwise, you risk short-circuiting a GPIO pin with an active high level to GND, which might destroy the chip.
+
 Remember to set the monitor baud rate to 19200 baud (no parity, 1 stop-bit) when you use the sketch.
 
 ### Using RescueAVR on an Arduino Uno with a Breadboard
 
-Below, you will find Fritzing wiring schemes for an ATtiny85, an ATtiny84, and an ATmega328. The full list of supported chips can be found in [Appendix A](#appendixa). For chips other than the ATtinyX5, ATtinyX4, and ATmega(X)8, you need to consult the particular microcontroller's datasheet. The pin mapping can be found in the Memory Programming Section of each data sheet. For some popular MCUs, I have included wiring instructions for the DIP/SOIC versions of the chips in [Appendix B](#appendixb).
+Below, you will find Fritzing wiring schemes for an ATtiny85, an ATtiny84, and an ATmega328. The complete list of supported chips can be found in [Appendix A](#appendixa). For chips other than the ATtinyX5, ATtinyX4, and ATmega(X)8, you need to consult the particular microcontroller's datasheet. The pin mapping can be found in the Memory Programming Section of each data sheet. For some popular MCUs, I have included wiring instructions for the DIP/SOIC versions of the chips in [Appendix B](#appendixb).
 
-The most crucial part of high-voltage programming is the ability to put 12 volts into the RESET pin of the MCU. So, you need a regulated 12-volt supply and an electronic switch that applies this voltage to the RESET pin. Such a switch using two transistors is shown below. The transistors I have used are pretty standard ones. You can probably use any other reasonable type. But make sure that the pins are ordered as in the picture, i.e., CBE (otherwise, the Fritzing diagram is incorrect).
+The most crucial part of high-voltage programming is the ability to put 12 volts into the RESET pin of the MCU. So, you need a regulated 12-volt supply and an electronic switch that applies this voltage to the RESET pin. Such a switch using two transistors is shown below. The transistors I have used are pretty standard ones. You can use any other reasonable type. But make sure that the pins are ordered as in the picture, i.e., CBE (otherwise, the Fritzing diagram is incorrect).
 
 ![12V switch](../pics/switch.png)
 
-The wiring is straightforward for small ATtinys because they use serial programming, and you need only a few wires. The Fritzing diagram for an ATtinyX5 looks as follows (and applies to ATtiny11, 12, 13, 22, and a few other 8-pin MCUs).
+The wiring is straightforward for small ATtinys because they use serial programming, and you need only a few wires. The Fritzing diagram for an ATtinyX5 looks as follows (and applies to ATtiny11, 12, 13, 22, and most other 8-pin MCUs).
 ![ATtinyX5 Fritzing sketch](../pics/RescueAVR-tinyX5_breadboard.png)
 
-Similarly, the wiring for an ATtinyX4 is quite simple as well. As you can see, one needs just 2 data lines (SDI, SDO), one clock line (SCI), one control line (SII), and in addition one has to switch the RESET line and the Vcc line. 
+Similarly, the wiring for an ATtinyX4 is quite simple as well. As you can see, one needs just 2 data lines (SDI, SDO), one clock line (SCI), and one control line (SII), and in addition, one has to switch the RESET line and the Vcc line. 
 ![ATtinyX4 Fritzing sketch](../pics/RescueAVR-tinyX4_breadboard.png)
 
 The wiring for an ATmegaX8 MCU is much more involved. One has to deal with 8 data lines, one clock line, and 9 control lines! This may look like the following Fritzing diagram.
@@ -43,7 +45,7 @@ Before you plug in the target chip, you should plug in the shield on the UNO. Af
 The Fusebit Doctor can be run stand-alone or connected to a computer. In the stand-alone mode (no serial communication lines connected to a computer), after power-up, all LEDs are off, and you can insert a chip. After pressing the button, the board will first try to recognize the chip:
 
 - The green LED is on for three seconds: chip has been successfully recognized,
-- the green LED is on for one second, then the red LED on for three seconds: The chip has been recognized, but there is not enough information in the firmware to resurrect it,
+- the green LED is on for one second, and then the red LED is on for three seconds: The chip has been recognized, but there is not enough information in the firmware to resurrect it,
 - the red LED is on for three seconds: no chip has been recognized.
 
 After recognizing the MCU, the board checks whether any lock bits are set. If this is not the case, it tries to set the fuses to a safe default setting. If successful, the green LED flashes for 5 seconds; otherwise, the red LED flashes for 5 seconds. If unsuccessful, you can try to set the erase jumper, which allows for erasing the entire chip (including the lock bits) in order to recover it.
@@ -52,7 +54,7 @@ If the board's serial line is connected to a computer using 19200 baud (no parit
 
 ### Interactive Rescue Mode
 
-To use RescueAVR in interactive mode, you should be connected to the Fusebit Doctor or Arduino by a serial line with 19200 baud, 1 stop bit, and no parity. This can be accomplished by using the Arduino monitor window or any serial line client (e.g., cu, screen, or PuTTY). 
+To use RescueAVR in interactive mode, you should be connected to the Fusebit Doctor or Arduino by a serial line with 19200 baud, 1 stop bit, and no parity. This can be accomplished using the Arduino monitor window or any serial line client (e.g., cu, screen, or PuTTY). 
 
 When switched on or after a reset, the sketch will try to determine what kind of programming mode the MCU uses and which MCU is connected. If unsuccessful, the following is displayed:
 
@@ -63,10 +65,11 @@ When switched on or after a reset, the sketch will try to determine what kind of
 		P - HVPP
 		T - HVPP for Tiny
 		S - HVSP
+		1 - HVSP for Tiny15
 		R - Start again
 	Choice: 
 
-When this message is shown, you either forget to insert the MCU, the wiring is wrong, the external power supply is not switched on, or the chip is badly damaged. In the latter case, you might try then to select the programming mode, where *HVPP* is the high-voltage *parallel* programming mode for ATmegas, *HVPP for Tiny* is the same mode for ATtinys (PAGEL and BS1 are both controlled by BS1, and BS2 and XA1 are both controlled by BS2, so PAGEL and XA1 should not be connected to the chip). *HVSP* is the high-voltage *serial* programming mode for ATtinyX4(1) and 8-pin chips. After selecting a programming mode, you can set fuses and lock bits. However, I have never been successful when the MCU could not be identified anymore. In any case, there is more likely a wiring error, or you forgot to plug the MCU into the socket (or breadboard).
+When this message is shown, you either forget to insert the MCU, the wiring is wrong, the external power supply is not switched on, or the chip is badly damaged. In the latter case, you might try then to select the programming mode, where *HVPP* is the high-voltage *parallel* programming mode for ATmegas, *HVPP for Tiny* is the same mode for ATtinys (PAGEL and BS1 are both controlled by BS1, and BS2 and XA1 are both controlled by BS2, so PAGEL and XA1 should not be connected to the chip). *HVSP* is the high-voltage *serial* programming mode for ATtinyX4(1) and 8-pin chips, *HVSP for Tiny15* is the serial mode for the ATtiny15. After selecting a programming mode, you can set fuses and lock bits. However, I have never been successful when the MCU could not be identified anymore. In any case, there is more likely a wiring error, or you forgot to plug the MCU into the socket (or breadboard).
 
 Usually, the chip is detected, and something along the following lines is printed.
 
@@ -91,7 +94,7 @@ You can then choose from the following menu.
 		R - Restart
 	Action: 
 
-If you are only interested in unbricking your chip, press 'T'. This will check whether lock bits are set, and if so, it will try to erase the chip (if the 'chip erase' jumper on the Fuse-Doctor board is set). After that, it will try to reset the fuses to their default value. If 'T' does not help, you can probably say 'goodbye' to the chip. 
+If you are only interested in unbricking your chip, press 'T'. This will check whether lock bits are set, and if so, it will try to erase the chip (if the 'chip erase' jumper on the Fuse-Doctor board is set). After that, it will try to reset the fuses to their default value. If 'T' does not help, you can say 'goodbye' to the chip. 
 
 The other options are all self-explanatory. If you want to change individual fuses, you may wish to consult the online fuse calculator [AVR Fuse Calculator](https://www.engbedded.com/fusecalc/) by Mark Hämmerling or the chip datasheet. The same goes for the lock byte.
 
@@ -112,8 +115,8 @@ The sketch works with all currently available *classic* AVR chips (i.e., mainly 
 - ATPWM81
 - ATUSB646/7, ATUSB1286/7
 - ATUSB82, ATUSB162
-- **AT90S1200,** <u>**AT90S2313**</u>
-- **AT90S2333, <u>AT90S4433</u>**
+- **AT90S1200,** ***AT90S2313***
+- **AT90S2333, *AT90S4433***
 - ***AT90S2323*, AT90S2343**
 - **AT90S4434, *AT90S8535***
 - ***AT90S8515***
@@ -124,7 +127,7 @@ The sketch works with all currently available *classic* AVR chips (i.e., mainly 
 - ***ATtiny2313***, ***ATtiny4313***
 - ***ATtiny24***, ***ATtiny44***, ***ATtiny84***
 - *ATtiny441*, ATtiny841
-- ATtiny15, 
+- *ATtiny15*, 
 - ***ATtiny25*, *ATtiny45*, *ATtiny85*** 
 - ***ATtiny2*6**
 - ***ATtiny261*, *ATtiny461*, *ATtiny861***
@@ -170,7 +173,7 @@ The wiring tables below apply only to the SOIC/DIP versions of the respective MC
 | 8          | Vcc                    | 12                   |
 
 
-#### ATtiny15 (HVSP)
+#### ATtiny15 (HVSP for Tiny15)
 
 | ATtiny pin | Function               | Arduino UNO pin name |
 | ---------- | ---------------------- | -------------------- |

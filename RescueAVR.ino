@@ -2,7 +2,7 @@
 
 //  Title:        RescueAVR
 
-#define VERSION  "3.0.2"
+#define VERSION  "3.1.0"
 
 /*Copyright 2013-2021 by Bernhard Nebel and parts are copyrighted by Jeff Keyzer.
   License: GPLv3
@@ -84,6 +84,12 @@ Version 3.0.1 (9.9.2024)
 Version 3.0.2 (10.9.2024)
   - fixed: for AT90S8515 and AT90S2313, it seems necessary to use multiple attempts to write the lock byte
   - fixed: for the AT90S chips, longer WR pulses are necessary for trhe erase function 
+
+Version 3.1.0 (28.9.2024)
+  - added: New mcu mode, called SLOWHVSP ("HVSP for Tiny15"), 
+    where 16 clock pulses are generated instead of one
+  - fixed: HV programming now works for ATtiny15 as well (on a bread board) 
+  - added: tested on AT90S4433
 */
 
 
@@ -532,7 +538,7 @@ byte XA1 = ORIGXA1; // ATtiny2313: XA1 = BS2
 
 
 // Internal definitions
-enum { HVPP, TINYHVPP, HVSP };
+enum { HVPP, TINYHVPP, HVSP, SLOWHVSP };
 enum { LFUSE_SEL, HFUSE_SEL, EFUSE_SEL, LOCK_SEL };
 enum { RED, GREEN };
 
@@ -600,7 +606,7 @@ boolean startup(void) {
   digitalWrite(XTAL1, LOW);
   
   Serial.println();
-  for (mcu_mode = HVPP; mcu_mode <= HVSP; mcu_mode++) {
+  for (mcu_mode = HVPP; mcu_mode <= SLOWHVSP; mcu_mode++) {
     enterHVProgMode(mcu_mode);
     mcu_signature = readSig(mcu_mode);
     leaveHVProgMode(mcu_mode);
@@ -610,7 +616,7 @@ boolean startup(void) {
         mcu_signature != 0x1E1E1E) // not the default value on the data bus
       break;
   }
-  if (mcu_mode > HVSP) {
+  if (mcu_mode > SLOWHVSP) {
     Serial.println(F("No chip found!"));
     Serial.println(F("Insert chip and restart or give details."));
     if (!interactive_mode) {
@@ -624,13 +630,14 @@ boolean startup(void) {
       Serial.println(F("  P - HVPP"));
       Serial.println(F("  T - HVPP for Tiny"));
       Serial.println(F("  S - HVSP"));
+      Serial.println(F("  1 - HVSP for Tiny15"));
       Serial.println(F("  R - Restart"));
       Serial.print(F("Choice: "));
       while (!Serial.available())  { };
       modec = toupper(Serial.read());
       Serial.println(modec);
       while (Serial.available()) Serial.read();
-      if (modec == 'P' || modec == 'T' || modec == 'S' || modec == 'R') break;
+      if (modec == 'P' || modec == 'T' || modec == 'S' || modec == 'R' || modec == '1') break;
       Serial.print("'");
       Serial.print(modec);
       Serial.println(F("' is not a valid choice."));
@@ -639,6 +646,7 @@ boolean startup(void) {
     case 'P': mcu_mode = HVPP; break;
     case 'T': mcu_mode = TINYHVPP; break;
     case 'S': mcu_mode = HVSP; break;
+    case '1': mcu_mode = SLOWHVSP; break;
     case 'R': return false; break;
     }
   }
@@ -956,6 +964,7 @@ void printHVLine(void) {
   case HVPP: Serial.println(F("HVPP")); break;
   case TINYHVPP: Serial.println(F("HVPP for Tiny")); break;
   case HVSP: Serial.println(F("HVSP")); break;
+  case SLOWHVSP: Serial.println(F("HVSP for Tiny15")); break;
   default: Serial.println(F("Unknown")); break;
   }
 }
@@ -970,12 +979,12 @@ boolean verifyFuses(int num, byte k1, byte k2, byte l1, byte l2, byte h1, byte h
 }
 
 unsigned long readSig(int mode) {
-  if (mode == HVSP) return readHVSPSig();
+  if (mode == HVSP || mode == SLOWHVSP) return readHVSPSig(mode);
   else return readHVPPSig(mode);
 }
 
 byte readOSCCAL(int mode) {
-  if (mode == HVSP) return readHVSPOSCCAL();
+  if (mode == HVSP || mode == SLOWHVSP) return readHVSPOSCCAL(mode);
   else return readHVPPOSCCAL(mode);
 }
 
@@ -985,7 +994,7 @@ byte readFuse(int mode, int selection, boolean read_fuse_and_lock) {
   int locsel = selection;
   byte fuseval, tempval = 0;
   if (read_fuse_and_lock) selection = LOCK_SEL;
-  if (mode == HVSP) fuseval = readHVSPFuse(selection);
+  if (mode == HVSP || mode == SLOWHVSP) fuseval = readHVSPFuse(mode,selection);
   else fuseval = readHVPPFuse(mode,selection);
   if (selection == LFUSE_SEL && mcu_signature == 0x1E9004) // read fuse of ATtiny11
     return (fuseval | 0x80);
@@ -1002,12 +1011,12 @@ byte readFuse(int mode, int selection, boolean read_fuse_and_lock) {
 }
 
 void burnFuse(int mode, byte val, int selection) {
-  if (mode == HVSP) burnHVSPFuse(val,selection);
+  if (mode == HVSP || mode == SLOWHVSP) burnHVSPFuse(mode,val,selection);
   else burnHVPPFuse(mode,val,selection);
 }
 
 void eraseChip(int mode) {
-  if (mode == HVSP) eraseHVSP();
+  if (mode == HVSP || mode == SLOWHVSP) eraseHVSP(mode);
   else eraseHVPP(mode);  
 }
 
@@ -1033,7 +1042,7 @@ void enterHVProgMode(int mode) {
   digitalWrite(OE, LOW);
   delay(100); // to let it settle, since otherwise Vcc may be already high due to XA1 high
  
-  if(mode == HVSP) {
+  if(mode == HVSP || mode == SLOWHVSP) {
     pinMode(SCI,OUTPUT);
     pinMode(SDI,OUTPUT);
     pinMode(SII,OUTPUT);
@@ -1049,7 +1058,7 @@ void enterHVProgMode(int mode) {
   delayMicroseconds(80);
   digitalWrite(RST, HIGH);   // Apply 12V to !RESET 
   
-  if(mode == HVSP) {
+  if(mode == HVSP || mode == SLOWHVSP) {
     // reset SDO after short delay, longer leads to logic contention because target sets SDO high after entering programming mode
     delayMicroseconds(1);   // datasheet says 10us, 1us is needed to avoid drive contention on SDO 
     pinMode(SDO, INPUT);    // set to input to avoid logic contention
@@ -1092,10 +1101,10 @@ void eraseHVPP(int mode) {
   waitForHigh(RDY); // when RDY goes high, we are done
 }
   
-void eraseHVSP(void) {
-  HVSP_write(HVSP_ERASE_CHIP_DATA, HVSP_ERASE_CHIP_INSTR1);
-  HVSP_write(0x00, HVSP_ERASE_CHIP_INSTR2);
-  HVSP_write(0x00, HVSP_ERASE_CHIP_INSTR3);
+void eraseHVSP(int mode) {
+  HVSP_write(mode,HVSP_ERASE_CHIP_DATA, HVSP_ERASE_CHIP_INSTR1);
+  HVSP_write(mode,0x00, HVSP_ERASE_CHIP_INSTR2);
+  HVSP_write(mode,0x00, HVSP_ERASE_CHIP_INSTR3);
   waitForHigh(SDO); 
 }
 
@@ -1158,35 +1167,35 @@ void burnHVPPFuse(int mode, byte fuse, int select)  // write extended, high or l
   }
 }
 
-void burnHVSPFuse(byte fuse, int select) {
+void burnHVSPFuse(int mode, byte fuse, int select) {
 
   switch (select) {
   case LFUSE_SEL:
-    HVSP_write(HVSP_WRITE_LFUSE_DATA, HVSP_WRITE_LFUSE_INSTR1);
-    HVSP_write(fuse, HVSP_WRITE_LFUSE_INSTR2);
-    HVSP_write(0x00, HVSP_WRITE_LFUSE_INSTR3);
-    HVSP_write(0x00, HVSP_WRITE_LFUSE_INSTR4);
+    HVSP_write(mode, HVSP_WRITE_LFUSE_DATA, HVSP_WRITE_LFUSE_INSTR1);
+    HVSP_write(mode, fuse, HVSP_WRITE_LFUSE_INSTR2);
+    HVSP_write(mode, 0x00, HVSP_WRITE_LFUSE_INSTR3);
+    HVSP_write(mode, 0x00, HVSP_WRITE_LFUSE_INSTR4);
     break;
 
   case HFUSE_SEL:    
-    HVSP_write(HVSP_WRITE_HFUSE_DATA, HVSP_WRITE_HFUSE_INSTR1);
-    HVSP_write(fuse, HVSP_WRITE_HFUSE_INSTR2);
-    HVSP_write(0x00, HVSP_WRITE_HFUSE_INSTR3);
-    HVSP_write(0x00, HVSP_WRITE_HFUSE_INSTR4);
+    HVSP_write(mode, HVSP_WRITE_HFUSE_DATA, HVSP_WRITE_HFUSE_INSTR1);
+    HVSP_write(mode, fuse, HVSP_WRITE_HFUSE_INSTR2);
+    HVSP_write(mode, 0x00, HVSP_WRITE_HFUSE_INSTR3);
+    HVSP_write(mode, 0x00, HVSP_WRITE_HFUSE_INSTR4);
     break;
     
   case EFUSE_SEL:
-    HVSP_write(HVSP_WRITE_EFUSE_DATA, HVSP_WRITE_EFUSE_INSTR1);
-    HVSP_write(fuse, HVSP_WRITE_EFUSE_INSTR2);
-    HVSP_write(0x00, HVSP_WRITE_EFUSE_INSTR3);
-    HVSP_write(0x00, HVSP_WRITE_EFUSE_INSTR4);
+    HVSP_write(mode, HVSP_WRITE_EFUSE_DATA, HVSP_WRITE_EFUSE_INSTR1);
+    HVSP_write(mode, fuse, HVSP_WRITE_EFUSE_INSTR2);
+    HVSP_write(mode, 0x00, HVSP_WRITE_EFUSE_INSTR3);
+    HVSP_write(mode, 0x00, HVSP_WRITE_EFUSE_INSTR4);
     break;
 
   case LOCK_SEL:
-    HVSP_write(HVSP_WRITE_LOCK_DATA, HVSP_WRITE_LOCK_INSTR1);
-    HVSP_write(fuse, HVSP_WRITE_LOCK_INSTR2);
-    HVSP_write(0x00, HVSP_WRITE_LOCK_INSTR3);
-    HVSP_write(0x00, HVSP_WRITE_LOCK_INSTR4);
+    HVSP_write(mode, HVSP_WRITE_LOCK_DATA, HVSP_WRITE_LOCK_INSTR1);
+    HVSP_write(mode, fuse, HVSP_WRITE_LOCK_INSTR2);
+    HVSP_write(mode, 0x00, HVSP_WRITE_LOCK_INSTR3);
+    HVSP_write(mode, 0x00, HVSP_WRITE_LOCK_INSTR4);
     break;
   }
   waitForHigh(SDO); 
@@ -1237,33 +1246,33 @@ byte readHVPPFuse(int mode, int select) {
   return fuse;
 }
 
-byte readHVSPFuse(int select) {
+byte readHVSPFuse(int mode, int select) {
   byte fuse = 0;
   
   switch (select) {
 
   case LFUSE_SEL:
-    HVSP_read(HVSP_READ_LFUSE_DATA, HVSP_READ_LFUSE_INSTR1);
-    HVSP_read(0x00, HVSP_READ_LFUSE_INSTR2);
-    fuse=HVSP_read(0x00, HVSP_READ_LFUSE_INSTR3);
+    HVSP_read(mode, HVSP_READ_LFUSE_DATA, HVSP_READ_LFUSE_INSTR1);
+    HVSP_read(mode, 0x00, HVSP_READ_LFUSE_INSTR2);
+    fuse=HVSP_read(mode, 0x00, HVSP_READ_LFUSE_INSTR3);
     break;
 
   case HFUSE_SEL:
-    HVSP_read(HVSP_READ_HFUSE_DATA, HVSP_READ_HFUSE_INSTR1);
-    HVSP_read(0x00, HVSP_READ_HFUSE_INSTR2);
-    fuse=HVSP_read(0x00, HVSP_READ_HFUSE_INSTR3);
+    HVSP_read(mode, HVSP_READ_HFUSE_DATA, HVSP_READ_HFUSE_INSTR1);
+    HVSP_read(mode, 0x00, HVSP_READ_HFUSE_INSTR2);
+    fuse=HVSP_read(mode, 0x00, HVSP_READ_HFUSE_INSTR3);
     break;
 
   case EFUSE_SEL:
-    HVSP_read(HVSP_READ_EFUSE_DATA, HVSP_READ_EFUSE_INSTR1);
-    HVSP_read(0x00, HVSP_READ_EFUSE_INSTR2);
-    fuse=HVSP_read(0x00, HVSP_READ_EFUSE_INSTR3);
+    HVSP_read(mode, HVSP_READ_EFUSE_DATA, HVSP_READ_EFUSE_INSTR1);
+    HVSP_read(mode, 0x00, HVSP_READ_EFUSE_INSTR2);
+    fuse=HVSP_read(mode, 0x00, HVSP_READ_EFUSE_INSTR3);
     break;
 
   case LOCK_SEL:
-    HVSP_read(HVSP_READ_LOCK_DATA, HVSP_READ_LOCK_INSTR1);
-    HVSP_read(0x00, HVSP_READ_LOCK_INSTR2);
-    fuse=HVSP_read(0x00, HVSP_READ_LOCK_INSTR3);
+    HVSP_read(mode, HVSP_READ_LOCK_DATA, HVSP_READ_LOCK_INSTR1);
+    HVSP_read(mode, 0x00, HVSP_READ_LOCK_INSTR2);
+    fuse=HVSP_read(mode, 0x00, HVSP_READ_LOCK_INSTR3);
     break;
   }
   return fuse;
@@ -1304,29 +1313,29 @@ byte readHVPPOSCCAL(int mode) {
   return result;
 }
 
-unsigned long readHVSPSig() {
+unsigned long readHVSPSig(int mode) {
 
   unsigned long result = 0;
 
   for (byte i=0;i<3;i++) {
-    HVSP_read(HVSP_READ_SIG_DATA, HVSP_READ_SIG_INSTR1);
-    HVSP_read(i, HVSP_READ_SIG_INSTR2);
-    HVSP_read(0x00, HVSP_READ_SIG_INSTR3);
-    result = (result<<8) + HVSP_read(0x00, HVSP_READ_SIG_INSTR4);
+    HVSP_read(mode, HVSP_READ_SIG_DATA, HVSP_READ_SIG_INSTR1);
+    HVSP_read(mode, i, HVSP_READ_SIG_INSTR2);
+    HVSP_read(mode, 0x00, HVSP_READ_SIG_INSTR3);
+    result = (result<<8) + HVSP_read(mode, 0x00, HVSP_READ_SIG_INSTR4);
   }
   return result;
 }
 
-byte readHVSPOSCCAL() {
-  HVSP_read(HVSP_READ_OSC_DATA, HVSP_READ_OSC_INSTR1);
-  HVSP_read(0x00, HVSP_READ_OSC_INSTR2);
-  HVSP_read(0x00, HVSP_READ_OSC_INSTR3);
-  return HVSP_read(0x00, HVSP_READ_OSC_INSTR4);
+byte readHVSPOSCCAL(int mode) {
+  HVSP_read(mode, HVSP_READ_OSC_DATA, HVSP_READ_OSC_INSTR1);
+  HVSP_read(mode, 0x00, HVSP_READ_OSC_INSTR2);
+  HVSP_read(mode, 0x00, HVSP_READ_OSC_INSTR3);
+  return HVSP_read(mode, 0x00, HVSP_READ_OSC_INSTR4);
 }
 
 
 
-byte HVSP_read(byte data, byte instr) { // Read a byte using the HVSP protocol
+byte HVSP_read(int mode, byte data, byte instr) { // Read a byte using the HVSP protocol
 
   byte response = 0x00; // a place to hold the response from target
 
@@ -1334,7 +1343,7 @@ byte HVSP_read(byte data, byte instr) { // Read a byte using the HVSP protocol
   // 1st bit is always zero
   digitalWrite(SDI, LOW);
   digitalWrite(SII, LOW);
-  sclk();
+  sclk(mode);
   
   // We capture a response on every readm even though only certain responses contain
   // valid data.  For fuses, the valid response is captured on the 3rd instruction write.
@@ -1358,7 +1367,7 @@ byte HVSP_read(byte data, byte instr) { // Read a byte using the HVSP protocol
       digitalWrite(SII, HIGH);
     else
       digitalWrite(SII, LOW);
-   sclk();
+   sclk(mode);
        
     if (i < 7) {  // remaining 7 bits of response are read here (one at a time)
       // note that i is one less than the bit position of response we are reading, since we read
@@ -1372,20 +1381,20 @@ byte HVSP_read(byte data, byte instr) { // Read a byte using the HVSP protocol
   for (int i=0; i<2; i++) {
     digitalWrite(SDI, LOW);
     digitalWrite(SII, LOW);
-    sclk();
+    sclk(mode);
   }
   
   return response;
 }
 
-void HVSP_write(byte data, byte instr) { // Write to target using the HVSP protocol
+void HVSP_write(int mode, byte data, byte instr) { // Write to target using the HVSP protocol
 
   digitalWrite(SCI, LOW);  // set clock low
   
   // 1st bit is always zero
   digitalWrite(SDI, LOW);
   digitalWrite(SII, LOW);
-  sclk();  // latch bit
+  sclk(mode);  // latch bit
   
   // Send each bit of data and instruction byte serially, MSB first
   // I do this by shifting the byte left 1 bit at a time and checking the value of the new MSB
@@ -1400,14 +1409,14 @@ void HVSP_write(byte data, byte instr) { // Write to target using the HVSP proto
     else
       digitalWrite(SII, LOW);
       
-   sclk();  // strobe SCI (serial clock) to latch data
+   sclk(mode);  // strobe SCI (serial clock) to latch data
   }
   
   // Last 2 bits are always zero
   for (int i=0; i<2; i++) {
     digitalWrite(SDI, LOW);
     digitalWrite(SII, LOW);   
-    sclk();
+    sclk(mode);
   }
 }
 
@@ -1441,14 +1450,23 @@ void waitForHigh(byte signal) {
 }
 
 
-void sclk(void) {  // send serial clock pulse, used by HVSP commands
+void sclk(int mode) {  // send serial clock pulse, used by HVSP commands
 
   // These delays are much  longer than the minimum requirements,
   // but we don't really care about speed.
-  delay(1);  
-  digitalWrite(SCI, HIGH);
-  delay(1);
-  digitalWrite(SCI, LOW);
+  if (mode == HVSP) {
+    delay(1);  
+    digitalWrite(SCI, HIGH);
+    delay(1);
+    digitalWrite(SCI, LOW);
+  } else {
+    for (int cl=0; cl < 16; cl++) {
+      delayMicroseconds(50);
+      digitalWrite(SCI, HIGH);
+      delayMicroseconds(50);
+      digitalWrite(SCI, LOW);
+    }
+  }
 }
 
 void strobe_xtal(void) {  // strobe xtal (usually to latch data on the bus)
