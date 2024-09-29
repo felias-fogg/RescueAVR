@@ -14,7 +14,7 @@ To do HV programming, you need an Arduino Uno, Nano, Pro Mini, Leonardo, or Mega
 
 Furthermore, the sketch is also an alternative firmware for [manekinen's Fusebit Doctor](https://web.archive.org/web/20180225102717/http://mdiy.pl/atmega-fusebit-doctor-hvpp/?lang=en). The pin mapping is different between these two versions. When the sketch is compiled for an Arduino Uno, Nano, Pro (Mini), Leonardo, or Mega(2560) in the Arduino IDE, it will use the Arduino Uno pin mapping. Otherwise, it uses the pin mapping for the Fusebit Doctor. One can also force which version is produced by defining the compile-time constants  `ARDUINO_MODE` or `FBD_MODE`, respectively.
 
-By now, the sketch covers 131 different MCU types and has been tested on most of the types that are available in DIP cases.
+By now, the sketch covers 131 different MCU types and has been tested on most of the types that are available in DIP packages.
 
 When using the sketch, remember to set the monitor baud rate to 19200 baud (no parity, 1 stop-bit). A [user manual](docs/manual.md) for the sketch is provided in the docs folder.
 
