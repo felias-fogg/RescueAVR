@@ -2,7 +2,7 @@
 
 //  Title:        RescueAVR
 
-#define VERSION  "3.1.0"
+#define VERSION  "3.1.1"
 
 /*Copyright 2013-2021 by Bernhard Nebel and parts are copyrighted by Jeff Keyzer.
   License: GPLv3
@@ -90,6 +90,10 @@ Version 3.1.0 (28.9.2024)
     where 16 clock pulses are generated instead of one
   - fixed: HV programming now works for ATtiny15 as well (on a bread board) 
   - added: tested on AT90S4433
+
+Version 3.3.1 (3.3.2025)
+  - added a bit more text in the beginning
+  - removed the 2 sec delay in the beginning. This was probably there because now after uploading the     firmware, you get some garbage output. 
 */
 
 
@@ -558,7 +562,6 @@ void setup() { // run once, when the sketch starts
   if (digitalRead(0) == LOW)
   interactive_mode = false; // no RS232 connection!
 #endif
-  delay(2000);
   Serial.begin(BAUD);  // Open serial port
   while (!Serial); // wait for serial line on Leaonardo to come up
   Serial.println();
@@ -606,6 +609,7 @@ boolean startup(void) {
   digitalWrite(XTAL1, LOW);
   
   Serial.println();
+  Serial.println(F("Checking for chips ..."));
   for (mcu_mode = HVPP; mcu_mode <= SLOWHVSP; mcu_mode++) {
     enterHVProgMode(mcu_mode);
     mcu_signature = readSig(mcu_mode);
